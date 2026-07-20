@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trauma Behaviour Annotator</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <header class="brand">
+        <div class="brand-row">
+          <h1>Trauma Annotator</h1>
+          <button type="button" id="btn-toggle-sidebar" class="ghost icon-btn" title="Collapse sidebar">«</button>
+        </div>
+        <p class="muted">Local frame &amp; behaviour labelling</p>
+      </header>
+
+      <div class="import-actions">
+        <button type="button" id="btn-load-video" class="primary">Load video…</button>
+        <button type="button" id="btn-load-frames">Load frames…</button>
+        <button type="button" id="btn-import-json">Import JSON…</button>
+        <input type="file" id="file-video" accept="video/*,.mp4,.mov,.avi,.mkv,.webm" hidden />
+        <input type="file" id="file-frames" accept="image/*,.zip,.jpg,.jpeg,.png" multiple hidden />
+        <input type="file" id="file-json" accept="application/json,.json" hidden />
+      </div>
+
+      <div class="fps-row">
+        <label for="extract-fps">Extract FPS <span class="muted">(blank = all)</span></label>
+        <input type="number" id="extract-fps" min="0.1" step="0.5" placeholder="source" />
+      </div>
+
+      <h2 class="section-title">Videos</h2>
+      <ul id="video-list"></ul>
+      <p id="video-empty" class="muted">No videos yet. Load an MP4 or frames to start.</p>
+    </aside>
+
+    <button type="button" id="btn-expand-sidebar" class="expand-side hidden" title="Show sidebar">»</button>
+
+    <main id="main">
+      <div id="empty-state" class="empty-state">
+        <h2>Open or load a video</h2>
+        <p>Use <strong>Load video</strong> to upload an MP4 — frames are extracted here, no separate commands.</p>
+      </div>
+
+      <div id="workspace" class="hidden">
+        <header class="toolbar">
+          <div class="toolbar-left">
+            <span id="video-title" class="video-title"></span>
+            <span id="frame-id" class="frame-id"></span>
+          </div>
+          <div class="toolbar-nav">
+            <button type="button" id="btn-zoom-out" title="Zoom out">−</button>
+            <button type="button" id="btn-zoom-fit" title="Fit">Fit</button>
+            <button type="button" id="btn-zoom-in" title="Zoom in">+</button>
+            <button type="button" id="btn-first" title="Home">⏮</button>
+            <button type="button" id="btn-prev" title="←">◀</button>
+            <button type="button" id="btn-play" title="Space">▶</button>
+            <button type="button" id="btn-next" title="→">▶</button>
+            <button type="button" id="btn-last" title="End">⏭</button>
+            <input type="range" id="scrubber" min="0" max="0" value="0" />
+            <span id="frame-counter">0 / 0</span>
+          </div>
+        </header>
+
+        <div class="workspace-body">
+          <div class="stage">
+            <section class="canvas-wrap" id="canvas-wrap">
+              <canvas id="canvas"></canvas>
+              <div id="canvas-hint" class="canvas-hint">Drag to draw · click object to select · Ctrl+scroll zoom</div>
+            </section>
+
+            <section id="objects-table-section" class="objects-table-section hidden">
+              <div class="table-header">
+                <h3>Object list <span class="muted" id="object-count"></span></h3>
+                <div class="btn-row tight">
+                  <button type="button" id="btn-confirm-all-table">Confirm all</button>
+                  <label class="inline-apply">Apply to
+                    <input type="number" id="apply-n" min="1" value="1" class="inline-num" /> frame(s)
+                  </label>
+                  <label class="inline-apply" title="What to do if those frames already have saved boxes">
+                    Existing boxes
+                    <select id="apply-mode">
+                      <option value="replace" selected>Replace them</option>
+                      <option value="merge">Keep them &amp; add new</option>
+                    </select>
+                  </label>
+                  <button type="button" id="btn-apply-objects" class="primary" title="Write confirmed objects to this frame (and the next N−1 frames if N&gt;1). The same person keeps the same ID.">Apply confirmed</button>
+                  <button type="button" id="btn-clear-objects" class="danger">Clear all objects</button>
+                </div>
+              </div>
+              <div class="table-scroll">
+                <table id="objects-table" class="objects-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>OK</th>
+                      <th>ID</th>
+                      <th>Role</th>
+                      <th>Label</th>
+                      <th>Conf</th>
+                      <th>Behaviours</th>
+                      <th>Source</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="objects-tbody"></tbody>
+                </table>
+              </div>
+              <p class="hint table-hint">
+                After Detect, a <span class="red">smart POI</span> is chosen (confidence + size + center). Change anytime with <strong>POI</strong>.
+                <strong>Apply</strong> writes confirmed boxes to this frame (or next N frames) — the <em>same person keeps the same ID</em>.
+                <strong>Existing boxes → Replace them</strong> clears old boxes first;
+                <strong>Keep them &amp; add new</strong> leaves old boxes and adds yours.
+              </p>
+            </section>
+          </div>
+
+          <section class="panels">
+            <div class="panel">
+              <h3>Detect people</h3>
+              <div class="detect-settings">
+                <label>Min conf <input type="range" id="detect-conf" min="0.35" max="0.9" step="0.01" value="0.35" />
+                  <span id="detect-conf-val">0.35</span></label>
+                <label>Size
+                  <select id="detect-imgsz">
+                    <option value="640">640 (fast)</option>
+                    <option value="960" selected>960</option>
+                    <option value="1280">1280</option>
+                    <option value="1600">1600 (slow)</option>
+                  </select>
+                </label>
+                <label>Model
+                  <select id="detect-model">
+                    <option value="yolo11n.pt">nano (fast)</option>
+                    <option value="yolo11s.pt">small</option>
+                    <option value="yolo11m.pt">medium</option>
+                  </select>
+                </label>
+                <label class="check"><input type="checkbox" id="detect-augment" /> Augment (slower, helps lying poses)</label>
+              </div>
+              <div class="btn-row">
+                <button type="button" id="btn-detect" class="primary" title="D">Detect</button>
+                <button type="button" id="btn-confirm-all">Confirm all</button>
+                <button type="button" id="btn-delete-unconfirmed">Drop unconfirmed</button>
+                <button type="button" id="btn-track" title="T">Track…</button>
+                <button type="button" id="btn-undo-track" disabled>Undo</button>
+              </div>
+              <p class="hint" id="detect-tip">Detections below 35% are ignored. After Detect, a smart POI is chosen automatically (red) — change it anytime with the POI button.</p>
+            </div>
+
+            <div class="panel" id="selected-object-panel">
+              <h3>Selected object</h3>
+              <p id="no-selection" class="muted">Select a row in the table or click a box on the frame.</p>
+              <div id="selection-editor" class="hidden">
+                <label>Label
+                  <select id="obj-label">
+                    <option value="person_of_interest">Person of interest</option>
+                    <option value="person">Person</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+                <p class="small-label">Behaviours for this person</p>
+                <div class="chip-row" id="obj-behaviour-btns"></div>
+                <div class="btn-row">
+                  <button type="button" id="btn-set-poi" class="primary">Set as POI (red)</button>
+                  <button type="button" id="btn-delete-obj" class="danger">Delete</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3>Frame behaviour <span class="muted">(multi-select)</span></h3>
+              <div id="behaviour-btns" class="chip-row"></div>
+            </div>
+
+            <div class="panel">
+              <h3>Video label</h3>
+              <div class="chip-row" id="video-label-btns">
+                <button type="button" class="chip" data-vlabel="trauma">Trauma</button>
+                <button type="button" class="chip" data-vlabel="no_trauma">No Trauma</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3>Comments</h3>
+              <textarea id="video-comment" rows="2" placeholder="Video-level comment…"></textarea>
+              <label class="small-label">Frame comment</label>
+              <textarea id="frame-comment" rows="2" placeholder="Frame-level comment…"></textarea>
+            </div>
+
+            <div class="panel">
+              <h3>Context</h3>
+              <textarea id="context" rows="2" placeholder="Background scenario…"></textarea>
+              <button type="button" id="btn-write-context" class="ghost">Write to context.txt</button>
+            </div>
+
+            <div class="panel">
+              <h3>Export</h3>
+              <div class="btn-row">
+                <a id="btn-export-json" class="button" href="#">JSON</a>
+                <a id="btn-export-coco" class="button" href="#">COCO</a>
+                <button type="button" id="btn-rebuild-coco">Rebuild all COCO</button>
+              </div>
+            </div>
+
+            <div class="panel status-panel">
+              <span id="save-status" class="muted">Ready</span>
+              <span id="detect-status" class="muted"></span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="conflict-modal">
+    <form method="dialog" id="conflict-form">
+      <h2>Video already in library</h2>
+      <p id="conflict-message"></p>
+      <ul id="conflict-stats" class="stats"></ul>
+      <div class="modal-actions">
+        <button type="submit" value="open" class="primary" id="conflict-open">Open existing</button>
+        <button type="submit" value="reextract_keep">Re-extract, keep annotations</button>
+        <button type="submit" value="reextract_wipe" class="danger">Re-extract &amp; wipe annotations…</button>
+        <button type="submit" value="create_new">Save as new folder</button>
+        <button type="submit" value="cancel" class="ghost">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="track-modal">
+    <form method="dialog" id="track-form">
+      <h2>Track forward</h2>
+      <p class="muted">Seed from the current red POI box and frame labels.</p>
+      <fieldset>
+        <legend>Propagate</legend>
+        <label><input type="checkbox" name="propagate_bbox" checked /> Bounding box</label>
+        <label><input type="checkbox" name="propagate_behaviours" checked /> Behaviour label(s)</label>
+        <label><input type="checkbox" name="propagate_comment" /> Frame comment</label>
+      </fieldset>
+      <fieldset>
+        <legend>Range</legend>
+        <label><input type="radio" name="range" value="end" checked /> To end of video</label>
+        <label>
+          <input type="radio" name="range" value="n" />
+          Next <input type="number" name="num_frames" min="1" value="30" class="inline-num" /> frames
+        </label>
+        <label><input type="checkbox" name="stop_on_label_change" /> Stop if existing label differs</label>
+      </fieldset>
+      <fieldset>
+        <legend>Existing data</legend>
+        <label><input type="checkbox" name="overwrite_bbox" checked /> Overwrite boxes</label>
+        <label><input type="checkbox" name="overwrite_labels" checked /> Overwrite labels / comments</label>
+      </fieldset>
+      <fieldset>
+        <legend>Tracker</legend>
+        <label>Stop if lost for
+          <input type="number" name="max_gap" min="1" max="60" value="8" class="inline-num" /> frames
+        </label>
+        <label>Min match IoU
+          <input type="number" name="iou_thresh" min="0.05" max="0.9" step="0.05" value="0.15" class="inline-num" />
+        </label>
+      </fieldset>
+      <div class="modal-actions">
+        <button type="submit" value="preview">Preview</button>
+        <button type="submit" value="track" class="primary">Track</button>
+        <button type="submit" value="cancel" class="ghost">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="wipe-modal">
+    <form method="dialog" id="wipe-form">
+      <h2>Delete annotations?</h2>
+      <p>Type the video id <strong id="wipe-id"></strong> to confirm. A backup will be kept.</p>
+      <input type="text" id="wipe-confirm" autocomplete="off" />
+      <div class="modal-actions">
+        <button type="submit" value="confirm" class="danger" id="wipe-go" disabled>Wipe &amp; re-extract</button>
+        <button type="submit" value="cancel" class="ghost">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <div id="wait-overlay" class="wait-overlay hidden" aria-live="assertive" aria-busy="true">
+    <div class="wait-card">
+      <div class="wait-spinner" aria-hidden="true"></div>
+      <p id="wait-message">Please wait…</p>
+      <p class="muted wait-sub">This may take a few moments</p>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
