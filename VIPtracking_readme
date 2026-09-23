@@ -1,0 +1,51 @@
+How VIP is identified
+- Person detection: YOLO11 detects all people present in each video frame.
+- Person tracking: Each detected person is assigned a unique Track ID, allowing the same person to be followed across consecutive frames.
+- Confidence filtering: Person detections below the confidence threshold of 0.25 are excluded from subsequent VIP scoring.
+- Bounding-box area: A person's relative size in the frame is calculated. 
+- Larger person → higher importance score.
+	Weight = 60%
+- Frame centrality: The distance between the person's centre and the centre of the video frame is calculated. 
+	Person closer to the centre → higher score.
+	Weight = 20%
+- Track persistence: The system considers how long a person has continuously been tracked. 
+	Longer presence → higher score.
+	Weight = 20%
+Combined VIP score:
+VIP" " Score=0.6(Area)+0.2(Centrality)+0.2(Track" " Persistence)
+
+Why the VIP selection is more stable
+- Multiple visual cues: VIP selection is not based only on the largest bounding box.
+- Temporal information: The system uses information accumulated across video frames rather than making an independent decision for every frame.
+- Score smoothing: Previous VIP scores contribute 90% and the current measurement contributes 10%, reducing sudden fluctuations.
+- VIP locking: Once a VIP is selected, that person remains the VIP unless another person becomes substantially more important.
+- 30% switching margin: A new person must achieve a score greater than 1.3× the current VIP's score before the VIP changes.
+- Reduced flickering: Smoothing and VIP locking prevent the VIP label from rapidly switching between people in adjacent frames.
+- Better handling of temporary changes: Someone briefly moving closer to the camera or becoming slightly larger is less likely to incorrectly replace the existing VIP.
+
+Important research interpretation
+	The method identifies the most visually prominent/important person, rather than recognising the person's actual identity.
+	The current VIP criteria are: 
+	60% bounding-box size
+	20% frame centrality
+	20% track persistence
+	MOVEMENT_THRESHOLD is defined in the code but movement is currently not included in the VIP score.
+	Therefore, it is better to describe the approach as more temporally stable and robust rather than automatically claiming it is "more accurate."
+	To demonstrate higher accuracy scientifically, the predicted VIP should be compared against human/manual VIP annotations.
+	An ablation study can compare: 
+	Largest person only
+	Area + centrality
+	Area + centrality + persistence
+	Full method with smoothing + VIP locking
+
+Explanation:
+- The method does not rely on a single observation to select the VIP. 
+- It combines three complementary indicators: 
+	60% person size: the visually dominant person generally occupies more screen space.
+	20% centrality: the person positioned closer to the centre receives greater importance.
+	20% persistence: a person consistently present across frames receives a higher score.
+- The VIP score is calculated continuously across the video, rather than independently for every frame. 
+- Temporal smoothing reduces the effect of sudden bounding-box or position changes. 
+- VIP locking/hysteresis prevents the VIP from changing because another person becomes slightly more prominent for only a few frames. 
+- A competing person must achieve approximately 30% greater score than the current VIP before the VIP is switched. 
+Therefore, the approach is designed to provide more consistent and temporally stable VIP selection than choosing the largest person independently in every frame.
