@@ -1,0 +1,11 @@
+-	Bounding box and VIP stuff is done through another python file (uploaded to github) if we can merge python for identifying VIP or POI person and then within our Annotator tool 
+o	Currently when you click on load video it only load one video 
+o	Can we have functionality where we can load video from folders and then it shows in left banner all videos which we can select one by one and then perform behavior classification and trauma / no trauma manually 
+o	Need merge JSON with bounding box and also with the behavior classification and trauma no trauma 
+o	Is there possibility to generate scene description automatically from the frames which is extracted from video can we have that 
+o	Please generate Metadata csv / excel  file from annotation which has below structure 
+ # | participant id | session id | filename | modality | start_time | end_time | behavioral | trauma_label
+1 | P001 | S001 | filename | video | | | normal | no trauma 
+-	Final result we are looking for 
+o	JSON file with bounding box and also with the behavior classification and also trauma no trauma and video id 
+o	Also the metadata csv file
