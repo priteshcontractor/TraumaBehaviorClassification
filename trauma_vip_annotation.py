@@ -1,143 +1,96 @@
-# trauma_vip_annotation.py
-# End-to-end YOLO tracking, VIP detection, annotations JSON and COCO export
-import os, cv2, json, numpy as np
+"""
+Batch VIP annotation (command line).
+
+Walks an input folder (and all sub-folders) in natural order, extracts frames for every video
+into the annotator's data folder, runs YOLO + ByteTrack with VIP selection on each one, and
+writes annotations.json + <video>_coco.json exactly like the web tool does. Open the web tool
+afterwards to review boxes and add behaviours / Trauma labels.
+
+Examples:
+    py trauma_vip_annotation.py --input "D:\\Trauma_Dataset_Input"
+    py trauma_vip_annotation.py --input "D:\\Trauma_Dataset_Input" --data .\\data --fps 5 --preview
+"""
+
+from __future__ import annotations
+
+import argparse
 from pathlib import Path
-from collections import defaultdict
-from ultralytics import YOLO
 
-INPUT_ROOT=r"D:\Project - 05 Dec 2025\Trauma_Dataset_Input"
-OUTPUT_ROOT=r"D:\Project - 05 Dec 2025\Trauma_Dataset_Output"
-MODEL_PATH='yolo11n.pt'
-CONF_THRESHOLD=0.25
-SAVE_FRAMES=True
-AREA_WEIGHT=0.6
-CENTER_WEIGHT=0.2
-AGE_WEIGHT=0.2
-SCORE_SMOOTHING=0.9
-VIP_HYSTERESIS=1.3
-
-model=YOLO(MODEL_PATH)
-
-def create_video_label(video_path):
-    p=video_path.lower()
-    if 'no trauma clips' in p: return 'no_trauma'
-    if 'trauma clips' in p: return 'trauma'
-    return 'unknown'
+import app
+import vip
 
 
-def process_video(video_path, output_dir):
-    os.makedirs(output_dir,exist_ok=True)
-    frames_dir=os.path.join(output_dir,'frames')
-    os.makedirs(frames_dir,exist_ok=True)
-    video_name=Path(video_path).stem
+def render_preview(vid: str, out_path: Path) -> None:
+    """Write an MP4 with the POI in red and other people in green (the old script's output video)."""
+    import cv2  # type: ignore
 
-    cap=cv2.VideoCapture(video_path)
-    width=int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height=int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps=cap.get(cv2.CAP_PROP_FPS) or 25
-    cap.release()
-
-    out_video=os.path.join(output_dir,Path(video_path).name)
-    writer=cv2.VideoWriter(out_video,cv2.VideoWriter_fourcc(*'mp4v'),fps,(width,height))
-
-    annotation_json={
-        'video_id':video_name,
-        'video_label':create_video_label(video_path),
-        'video_comment':'',
-        'context':'',
-        'frames':{},
-        'frame_dims':{}
-    }
-
-    coco={
-      'info':{'description':f'Annotated objects for {video_name}','video_id':video_name,'video_label':create_video_label(video_path),'video_comment':'','context':''},
-      'images':[],
-      'annotations':[],
-      'categories':[{'id':1,'name':'person_of_interest'},{'id':2,'name':'person'},{'id':3,'name':'other'}]
-    }
-
-    vip_scores=defaultdict(float)
-    track_age=defaultdict(int)
-    vip_locked_id=None
-    frame_idx=1
-    ann_id=1
-    frame_center_x=width/2
-    frame_center_y=height/2
-    max_area=width*height
-    diagonal=np.sqrt(width**2+height**2)
-
-    for res in model.track(source=video_path,stream=True,persist=True,classes=[0]):
-        frame=res.orig_img.copy()
-        current_scores={}
-        dets=[]
-
-        if res.boxes.id is not None:
-            boxes=res.boxes.xyxy.cpu().numpy()
-            ids=res.boxes.id.cpu().numpy().astype(int)
-            confs=res.boxes.conf.cpu().numpy()
-            for box,tid,conf in zip(boxes,ids,confs):
-                if conf<CONF_THRESHOLD: continue
-                x1,y1,x2,y2=map(int,box)
-                cx=(x1+x2)/2; cy=(y1+y2)/2
-                track_age[tid]+=1
-                area=((x2-x1)*(y2-y1))/max_area
-                center=1-(np.sqrt((cx-frame_center_x)**2+(cy-frame_center_y)**2)/diagonal)
-                age=min(track_age[tid]/300.0,1.0)
-                imp=AREA_WEIGHT*area+CENTER_WEIGHT*center+AGE_WEIGHT*age
-                vip_scores[tid]=SCORE_SMOOTHING*vip_scores[tid]+(1-SCORE_SMOOTHING)*imp
-                current_scores[tid]=vip_scores[tid]
-                dets.append((x1,y1,x2,y2,tid,float(conf)))
-
-        if current_scores:
-            cand=max(current_scores,key=current_scores.get)
-            if vip_locked_id is None:
-                vip_locked_id=cand
-            elif current_scores[cand] > current_scores.get(vip_locked_id,0)*VIP_HYSTERESIS:
-                vip_locked_id=cand
-
-        frame_name=f'frame_{frame_idx:06d}.jpg'
-        objs=[]
-        coco['images'].append({'id':frame_idx,'file_name':frame_name,'width':width,'height':height,'behaviours':['normal'],'behaviour':'normal','comment':''})
-
-        for x1,y1,x2,y2,tid,conf in dets:
-            is_poi=(tid==vip_locked_id)
-            color=(0,0,255) if is_poi else (0,255,0)
-            cv2.rectangle(frame,(x1,y1),(x2,y2),color,3)
-            cv2.putText(frame,('VIP-' if is_poi else 'ID:')+str(tid),(x1,y1-10),cv2.FONT_HERSHEY_SIMPLEX,0.7,color,2)
-            obj={
-             'id':f'track_{tid}','bbox':[float(x1),float(y1),float(x2),float(y2)],'label':'person_of_interest' if is_poi else 'person','behaviours':['normal'],'confirmed':bool(True),'source':'yolo','conf':round(conf,4),'is_poi':bool(is_poi)}
-            objs.append(obj)
-            w=x2-x1; h=y2-y1
-            coco['annotations'].append({'id':ann_id,'image_id':frame_idx,'category_id':1 if is_poi else 2,'bbox':[float(x1),float(y1),float(w),float(h)],'area':float(w*h),'iscrowd':0,'behaviours':['normal'],'behaviour':'normal','object_id':f'track_{tid}','is_poi':bool(is_poi)})
-            ann_id+=1
-
-        if objs:
-            if SAVE_FRAMES:
-                cv2.imwrite(os.path.join(frames_dir,frame_name),frame)
-            annotation_json['frame_dims'][frame_name]=[width,height]
-            annotation_json['frames'][frame_name]={'behaviours':['normal'],'comment':'','bbox':objs[0]['bbox'],'objects':objs}
-
-        writer.write(frame)
-        frame_idx+=1
-
-    writer.release()
-    with open(os.path.join(output_dir,f'{video_name}_annotations.json'),'w',encoding='utf-8') as f: json.dump(annotation_json,f,indent=2)
-    with open(os.path.join(output_dir,f'{video_name}_coco.json'),'w',encoding='utf-8') as f: json.dump(coco,f,indent=2)
-
-
-def process_dataset(root_dir):
-    exts=('.mp4','.avi','.mov','.mkv')
-    for root,dirs,files in os.walk(root_dir):
-        if 'output' in root.lower():
+    d = app.video_dir(vid)
+    data = app.load_annotations(vid)
+    frames = data["_frame_order"]
+    if not frames:
+        return
+    fps = app.read_meta(vid).get("fps") or 25
+    first = vip.read_image(d / frames[0])
+    h, w = first.shape[:2]
+    tmp = out_path.with_suffix(".tmp.mp4")
+    writer = cv2.VideoWriter(str(tmp), cv2.VideoWriter_fourcc(*"mp4v"), float(fps), (w, h))
+    for name in frames:
+        img = vip.read_image(d / name)
+        if img is None:
             continue
-        for file in files:
-            if not file.lower().endswith(exts):
-                continue
-            rel=os.path.relpath(root,root_dir)
-            video_name=os.path.splitext(file)[0]
-            out_dir=os.path.join(OUTPUT_ROOT,rel,video_name)
-            process_video(os.path.join(root,file),out_dir)
+        for o in data["frames"][name]["objects"]:
+            x1, y1, x2, y2 = (int(v) for v in o["bbox"])
+            color = (0, 0, 255) if o.get("is_poi") else (0, 255, 0)
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 3)
+            tag = ("VIP " if o.get("is_poi") else "") + str(o["id"]).replace("track_", "ID ").replace("lie_", "Lying ")
+            cv2.putText(img, tag, (x1, max(12, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        writer.write(img)
+    writer.release()
+    tmp.replace(out_path)
 
-if __name__=='__main__':
-    process_dataset(INPUT_ROOT)
-    print('Finished.')
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Batch YOLO tracking + VIP detection into the annotator data folder")
+    ap.add_argument("--input", required=True, help="Folder with videos (sub-folders are included)")
+    ap.add_argument("--data", default=str(app.APP_DIR / "data"), help="Annotator data folder (default: ./data)")
+    ap.add_argument("--fps", type=float, default=None, help="Extract at this FPS (default: every frame)")
+    ap.add_argument("--model", default=vip.DEFAULT_WEIGHTS, choices=vip.WEIGHT_CHOICES,
+                    help=f"YOLO weights (default: {vip.DEFAULT_WEIGHTS}; yolo11n.pt is faster, yolo11m.pt more accurate)")
+    ap.add_argument("--imgsz", type=int, default=640, help="YOLO inference size")
+    ap.add_argument("--no-folder-labels", action="store_true",
+                    help="Do not pre-fill Trauma / No trauma from folder names")
+    ap.add_argument("--reextract", action="store_true", help="Re-extract videos that already have frames")
+    ap.add_argument("--skip-vip", action="store_true", help="Only extract frames")
+    ap.add_argument("--preview", action="store_true", help="Also write <video>_vip_preview.mp4 with boxes drawn")
+    args = ap.parse_args()
+
+    app.set_data_dir(args.data)
+    root = Path(args.input).expanduser().resolve()
+    if not root.is_dir():
+        raise SystemExit(f"Input folder not found: {root}")
+
+    print(f"Input : {root}")
+    print(f"Data  : {app.DATA_DIR}")
+    result = app.import_folder(
+        None, root, args.fps, not args.no_folder_labels, auto_vip=False,
+        reextract=args.reextract, log=print,
+    )
+    ready = result["imported"] + result["skipped"]
+    if not args.skip_vip:
+        for i, vid in enumerate(ready, 1):
+            print(f"[VIP {i}/{len(ready)}] {vid}")
+            res = app.run_auto_vip(None, vid, args.model, args.imgsz, log=print)
+            print(f"    VIP found in {res['poi_frames']}/{res['frames']} frames · "
+                  f"lying person in {res.get('lying_frames', 0)}")
+            if args.preview:
+                out = app.video_dir(vid) / f"{vid}_vip_preview.mp4"
+                render_preview(vid, out)
+                print(f"    preview: {out}")
+    for f in result["failed"]:
+        print(f"FAILED {f['video_id']}: {f['error']}")
+    print(f"Finished: {len(ready)} video(s) ready, {len(result['failed'])} failed. "
+          f"Start the annotator with:  py app.py --data \"{app.DATA_DIR}\"")
+
+
+if __name__ == "__main__":
+    main()

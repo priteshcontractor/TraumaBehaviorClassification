@@ -1,6 +1,6 @@
 {
   "video_id": "annotated_video",
-  "video_label": null,
+  "video_label": "trauma",
   "video_comment": "",
   "context": "",
   "frames": {
@@ -11,586 +11,1772 @@
       ],
       "comment": "test",
       "bbox": [
-        70.0,
-        105.28125,
-        564.0,
-        330.28125
+        277.87,
+        30.96,
+        454.85,
+        302.06
+      ],
+      "objects": [
+        {
+          "id": "det_1790518391945_17_c8eb60",
+          "bbox": [
+            277.87,
+            30.96,
+            454.85,
+            302.06
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "hyper_arousal"
+          ],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.8863784074783325,
+          "is_poi": true,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790564681405_3_1991e1",
+          "bbox": [
+            2.15,
+            195.93,
+            259.49,
+            314.71
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.4821382761001587,
+          "is_poi": false,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790518391945_18_49e083",
+          "bbox": [
+            554.58,
+            126.13,
+            604.98,
+            298.44
+          ],
+          "label": "person",
+          "behaviours": [
+            "flashback",
+            "hyper_arousal"
+          ],
+          "confirmed": true,
+          "source": "detection",
+          "conf": null,
+          "is_poi": false,
+          "poi_locked": false
+        }
       ]
     },
     "frame_000002.jpg": {
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "behaviours": [],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        555.85,
+        127.94,
+        606.24,
+        300.9
+      ],
+      "objects": [
+        {
+          "id": "det_1790564701843_6_5112e5",
+          "bbox": [
+            1.36,
+            196.37,
+            250.1,
+            322.36
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.5491225123405457,
+          "is_poi": false,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790518391945_18_49e083",
+          "bbox": [
+            555.85,
+            127.94,
+            606.24,
+            300.9
+          ],
+          "label": "person_of_interest",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000003.jpg": {
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "behaviours": [],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        555.61,
+        127.45,
+        606.31,
+        301.26
+      ],
+      "objects": [
+        {
+          "id": "det_1790518391945_18_49e083",
+          "bbox": [
+            555.61,
+            127.45,
+            606.31,
+            301.26
+          ],
+          "label": "person_of_interest",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000004.jpg": {
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "behaviours": [],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000005.jpg": {
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "behaviours": [],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        276.65,
+        37.32,
+        606.87,
+        303.92
+      ],
+      "objects": [
+        {
+          "id": "det_1790566551820_6_c14069",
+          "bbox": [
+            276.65,
+            37.32,
+            606.87,
+            303.92
+          ],
+          "label": "person_of_interest",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.9052780866622925,
+          "is_poi": true,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790566551820_7_5f29ef",
+          "bbox": [
+            1.06,
+            44.35,
+            251.19,
+            302.4
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.8146507143974304,
+          "is_poi": false,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000006.jpg": {
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "behaviours": [],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        275.19,
+        36.99,
+        605.34,
+        300.14
+      ],
+      "objects": [
+        {
+          "id": "det_1790518711474_3_293b29",
+          "bbox": [
+            275.19,
+            36.99,
+            605.34,
+            300.14
+          ],
+          "label": "person_of_interest",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.9048241972923279,
+          "is_poi": true,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790518711475_4_797905",
+          "bbox": [
+            2.23,
+            44.48,
+            253.82,
+            302.38
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.8647707104682922,
+          "is_poi": false,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000007.jpg": {
       "behaviours": [],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        274.22,
+        26.0,
+        603.49,
+        304.16
+      ],
+      "objects": [
+        {
+          "id": "det_1790518277866_11_9f1170",
+          "bbox": [
+            1.95,
+            41.28,
+            259.3,
+            300.02
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.888560950756073,
+          "is_poi": false,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790518277866_12_165f55",
+          "bbox": [
+            274.22,
+            26.0,
+            603.49,
+            304.16
+          ],
+          "label": "person_of_interest",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.8836973309516907,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000008.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        277.04,
+        18.09,
+        601.0,
+        300.73
+      ],
+      "objects": [
+        {
+          "id": "det_1790518315011_15_86f9bb",
+          "bbox": [
+            1.55,
+            46.27,
+            257.03,
+            300.15
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.9023579955101013,
+          "is_poi": false,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790518315011_16_7cd19b",
+          "bbox": [
+            277.04,
+            18.09,
+            601.0,
+            300.73
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.8988595008850098,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000009.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000010.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000011.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000012.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000013.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000014.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000015.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000016.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000017.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000018.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000019.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000020.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000021.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000022.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000023.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000024.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000025.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000026.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000027.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000028.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000029.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000030.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000031.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000032.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000033.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000034.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000035.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000036.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000037.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000038.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000039.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000040.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000041.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000042.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000043.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000044.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000045.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000046.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000047.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000048.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000049.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000050.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000051.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000052.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000053.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000054.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000055.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000056.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000057.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000058.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000059.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000060.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000061.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000062.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000063.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000064.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000065.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000066.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000067.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000068.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000069.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000070.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000071.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000072.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000073.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000074.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000075.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000076.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000077.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000078.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000079.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000080.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000081.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000082.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000083.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000084.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        78.43,
+        37.33,
+        353.51,
+        302.3
+      ],
+      "objects": [
+        {
+          "id": "det_1790518793789_5_6ed2d1",
+          "bbox": [
+            78.43,
+            37.33,
+            353.51,
+            302.3
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.7620980143547058,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000085.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000086.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000087.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000088.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000089.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000090.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000091.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        77.15,
+        42.01,
+        358.78,
+        300.4
+      ],
+      "objects": [
+        {
+          "id": "det_1790566598931_8_983b49",
+          "bbox": [
+            77.15,
+            42.01,
+            358.78,
+            300.4
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "detection",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000092.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        97.97,
+        39.47,
+        355.45,
+        301.39
+      ],
+      "objects": [
+        {
+          "id": "det_1790566598931_8_983b49",
+          "bbox": [
+            97.97,
+            39.47,
+            355.45,
+            301.39
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000093.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        82.23,
+        36.51,
+        344.07,
+        300.83
+      ],
+      "objects": [
+        {
+          "id": "det_1790566598931_8_983b49",
+          "bbox": [
+            82.23,
+            36.51,
+            344.07,
+            300.83
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000094.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        62.06,
+        39.23,
+        343.64,
+        302.53
+      ],
+      "objects": [
+        {
+          "id": "det_1790566598931_8_983b49",
+          "bbox": [
+            62.06,
+            39.23,
+            343.64,
+            302.53
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000095.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        53.18,
+        40.07,
+        342.48,
+        300.05
+      ],
+      "objects": [
+        {
+          "id": "det_1790566598931_8_983b49",
+          "bbox": [
+            53.18,
+            40.07,
+            342.48,
+            300.05
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000096.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        48.14,
+        35.75,
+        337.06,
+        302.11
+      ],
+      "objects": [
+        {
+          "id": "det_1790566598931_8_983b49",
+          "bbox": [
+            48.14,
+            35.75,
+            337.06,
+            302.11
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "tracker",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000097.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000098.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000099.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000100.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000101.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000102.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        92.63,
+        0.0,
+        314.04,
+        263.72
+      ],
+      "objects": [
+        {
+          "id": "det_1790566644126_9_1b07f8",
+          "bbox": [
+            92.63,
+            0.0,
+            314.04,
+            263.72
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "manual",
+          "conf": 0.4683133065700531,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000103.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000104.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000105.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        43.81,
+        40.16,
+        279.79,
+        301.16
+      ],
+      "objects": [
+        {
+          "id": "det_1790566669000_10_46119e",
+          "bbox": [
+            43.81,
+            40.16,
+            279.79,
+            301.16
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "detection",
+          "conf": null,
+          "is_poi": true,
+          "poi_locked": false
+        }
+      ]
     },
     "frame_000106.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000107.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000108.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000109.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000110.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000111.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000112.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": null,
+      "objects": []
     },
     "frame_000113.jpg": {
-      "behaviours": [],
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "comment": "",
-      "bbox": null
+      "bbox": [
+        3.49,
+        25.14,
+        272.18,
+        302.04
+      ],
+      "objects": [
+        {
+          "id": "det_1790517952505_6_5f4577",
+          "bbox": [
+            3.49,
+            25.14,
+            272.18,
+            302.04
+          ],
+          "label": "person_of_interest",
+          "behaviours": [
+            "flashback",
+            "avoidance",
+            "hyper_arousal",
+            "negative_emotion"
+          ],
+          "confirmed": true,
+          "source": "manual",
+          "conf": 0.5101332664489746,
+          "is_poi": true,
+          "poi_locked": false
+        },
+        {
+          "id": "det_1790517952505_7_9ea3cb",
+          "bbox": [
+            124.6,
+            38.51,
+            277.37,
+            298.79
+          ],
+          "label": "person",
+          "behaviours": [],
+          "confirmed": true,
+          "source": "detection",
+          "conf": 0.3558131158351898,
+          "is_poi": false,
+          "poi_locked": false
+        }
+      ]
     }
   },
   "frame_dims": {
@@ -1046,5 +2232,7 @@
       640,
       360
     ]
-  }
+  },
+  "participant_id": "",
+  "session_id": ""
 }

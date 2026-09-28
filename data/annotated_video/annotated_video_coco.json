@@ -1,10 +1,14 @@
 {
   "info": {
-    "description": "Person-of-interest boxes for annotated_video",
+    "description": "Annotated objects for annotated_video",
     "video_id": "annotated_video",
-    "video_label": null,
+    "filename": "annotated_video",
+    "participant_id": "",
+    "session_id": "",
+    "video_label": "trauma",
     "video_comment": "",
-    "context": ""
+    "context": "",
+    "fps": null
   },
   "images": [
     {
@@ -12,6 +16,7 @@
       "file_name": "frame_000001.jpg",
       "width": 640,
       "height": 360,
+      "frame_index": 0,
       "behaviours": [
         "flashback",
         "hyper_arousal"
@@ -24,10 +29,8 @@
       "file_name": "frame_000002.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "frame_index": 1,
+      "behaviours": [],
       "behaviour": null,
       "comment": ""
     },
@@ -36,10 +39,8 @@
       "file_name": "frame_000003.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "frame_index": 2,
+      "behaviours": [],
       "behaviour": null,
       "comment": ""
     },
@@ -48,10 +49,8 @@
       "file_name": "frame_000004.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "frame_index": 3,
+      "behaviours": [],
       "behaviour": null,
       "comment": ""
     },
@@ -60,10 +59,8 @@
       "file_name": "frame_000005.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "frame_index": 4,
+      "behaviours": [],
       "behaviour": null,
       "comment": ""
     },
@@ -72,10 +69,8 @@
       "file_name": "frame_000006.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [
-        "flashback",
-        "hyper_arousal"
-      ],
+      "frame_index": 5,
+      "behaviours": [],
       "behaviour": null,
       "comment": ""
     },
@@ -84,6 +79,7 @@
       "file_name": "frame_000007.jpg",
       "width": 640,
       "height": 360,
+      "frame_index": 6,
       "behaviours": [],
       "behaviour": null,
       "comment": ""
@@ -93,7 +89,13 @@
       "file_name": "frame_000008.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 7,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -102,7 +104,13 @@
       "file_name": "frame_000009.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 8,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -111,7 +119,13 @@
       "file_name": "frame_000010.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 9,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -120,7 +134,13 @@
       "file_name": "frame_000011.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 10,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -129,7 +149,13 @@
       "file_name": "frame_000012.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 11,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -138,7 +164,13 @@
       "file_name": "frame_000013.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 12,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -147,7 +179,13 @@
       "file_name": "frame_000014.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 13,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -156,7 +194,13 @@
       "file_name": "frame_000015.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 14,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -165,7 +209,13 @@
       "file_name": "frame_000016.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 15,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -174,7 +224,13 @@
       "file_name": "frame_000017.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 16,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -183,7 +239,13 @@
       "file_name": "frame_000018.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 17,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -192,7 +254,13 @@
       "file_name": "frame_000019.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 18,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -201,7 +269,13 @@
       "file_name": "frame_000020.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 19,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -210,7 +284,13 @@
       "file_name": "frame_000021.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 20,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -219,7 +299,13 @@
       "file_name": "frame_000022.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 21,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -228,7 +314,13 @@
       "file_name": "frame_000023.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 22,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -237,7 +329,13 @@
       "file_name": "frame_000024.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 23,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -246,7 +344,13 @@
       "file_name": "frame_000025.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 24,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -255,7 +359,13 @@
       "file_name": "frame_000026.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 25,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -264,7 +374,13 @@
       "file_name": "frame_000027.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 26,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -273,7 +389,13 @@
       "file_name": "frame_000028.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 27,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -282,7 +404,13 @@
       "file_name": "frame_000029.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 28,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -291,7 +419,13 @@
       "file_name": "frame_000030.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 29,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -300,7 +434,13 @@
       "file_name": "frame_000031.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 30,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -309,7 +449,13 @@
       "file_name": "frame_000032.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 31,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -318,7 +464,13 @@
       "file_name": "frame_000033.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 32,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -327,7 +479,13 @@
       "file_name": "frame_000034.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 33,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -336,7 +494,13 @@
       "file_name": "frame_000035.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 34,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -345,7 +509,13 @@
       "file_name": "frame_000036.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 35,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -354,7 +524,13 @@
       "file_name": "frame_000037.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 36,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -363,7 +539,13 @@
       "file_name": "frame_000038.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 37,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -372,7 +554,13 @@
       "file_name": "frame_000039.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 38,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -381,7 +569,13 @@
       "file_name": "frame_000040.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 39,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -390,7 +584,13 @@
       "file_name": "frame_000041.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 40,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -399,7 +599,13 @@
       "file_name": "frame_000042.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 41,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -408,7 +614,13 @@
       "file_name": "frame_000043.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 42,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -417,7 +629,13 @@
       "file_name": "frame_000044.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 43,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -426,7 +644,13 @@
       "file_name": "frame_000045.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 44,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -435,7 +659,13 @@
       "file_name": "frame_000046.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 45,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -444,7 +674,13 @@
       "file_name": "frame_000047.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 46,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -453,7 +689,13 @@
       "file_name": "frame_000048.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 47,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -462,7 +704,13 @@
       "file_name": "frame_000049.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 48,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -471,7 +719,13 @@
       "file_name": "frame_000050.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 49,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -480,7 +734,13 @@
       "file_name": "frame_000051.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 50,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -489,7 +749,13 @@
       "file_name": "frame_000052.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 51,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -498,7 +764,13 @@
       "file_name": "frame_000053.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 52,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -507,7 +779,13 @@
       "file_name": "frame_000054.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 53,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -516,7 +794,13 @@
       "file_name": "frame_000055.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 54,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -525,7 +809,13 @@
       "file_name": "frame_000056.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 55,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -534,7 +824,13 @@
       "file_name": "frame_000057.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 56,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -543,7 +839,13 @@
       "file_name": "frame_000058.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 57,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -552,7 +854,13 @@
       "file_name": "frame_000059.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 58,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -561,7 +869,13 @@
       "file_name": "frame_000060.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 59,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -570,7 +884,13 @@
       "file_name": "frame_000061.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 60,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -579,7 +899,13 @@
       "file_name": "frame_000062.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 61,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -588,7 +914,13 @@
       "file_name": "frame_000063.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 62,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -597,7 +929,13 @@
       "file_name": "frame_000064.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 63,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -606,7 +944,13 @@
       "file_name": "frame_000065.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 64,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -615,7 +959,13 @@
       "file_name": "frame_000066.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 65,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -624,7 +974,13 @@
       "file_name": "frame_000067.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 66,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -633,7 +989,13 @@
       "file_name": "frame_000068.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 67,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -642,7 +1004,13 @@
       "file_name": "frame_000069.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 68,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -651,7 +1019,13 @@
       "file_name": "frame_000070.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 69,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -660,7 +1034,13 @@
       "file_name": "frame_000071.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 70,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -669,7 +1049,13 @@
       "file_name": "frame_000072.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 71,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -678,7 +1064,13 @@
       "file_name": "frame_000073.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 72,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -687,7 +1079,13 @@
       "file_name": "frame_000074.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 73,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -696,7 +1094,13 @@
       "file_name": "frame_000075.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 74,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -705,7 +1109,13 @@
       "file_name": "frame_000076.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 75,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -714,7 +1124,13 @@
       "file_name": "frame_000077.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 76,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -723,7 +1139,13 @@
       "file_name": "frame_000078.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 77,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -732,7 +1154,13 @@
       "file_name": "frame_000079.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 78,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -741,7 +1169,13 @@
       "file_name": "frame_000080.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 79,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -750,7 +1184,13 @@
       "file_name": "frame_000081.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 80,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -759,7 +1199,13 @@
       "file_name": "frame_000082.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 81,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -768,7 +1214,13 @@
       "file_name": "frame_000083.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 82,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -777,7 +1229,13 @@
       "file_name": "frame_000084.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 83,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -786,7 +1244,13 @@
       "file_name": "frame_000085.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 84,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -795,7 +1259,13 @@
       "file_name": "frame_000086.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 85,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -804,7 +1274,13 @@
       "file_name": "frame_000087.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 86,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -813,7 +1289,13 @@
       "file_name": "frame_000088.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 87,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -822,7 +1304,13 @@
       "file_name": "frame_000089.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 88,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -831,7 +1319,13 @@
       "file_name": "frame_000090.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 89,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -840,7 +1334,13 @@
       "file_name": "frame_000091.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 90,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -849,7 +1349,13 @@
       "file_name": "frame_000092.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 91,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -858,7 +1364,13 @@
       "file_name": "frame_000093.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 92,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -867,7 +1379,13 @@
       "file_name": "frame_000094.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 93,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -876,7 +1394,13 @@
       "file_name": "frame_000095.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 94,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -885,7 +1409,13 @@
       "file_name": "frame_000096.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 95,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -894,7 +1424,13 @@
       "file_name": "frame_000097.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 96,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -903,7 +1439,13 @@
       "file_name": "frame_000098.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 97,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -912,7 +1454,13 @@
       "file_name": "frame_000099.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 98,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -921,7 +1469,13 @@
       "file_name": "frame_000100.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 99,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -930,7 +1484,13 @@
       "file_name": "frame_000101.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 100,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -939,7 +1499,13 @@
       "file_name": "frame_000102.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 101,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -948,7 +1514,13 @@
       "file_name": "frame_000103.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 102,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -957,7 +1529,13 @@
       "file_name": "frame_000104.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 103,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -966,7 +1544,13 @@
       "file_name": "frame_000105.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 104,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -975,7 +1559,13 @@
       "file_name": "frame_000106.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 105,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -984,7 +1574,13 @@
       "file_name": "frame_000107.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 106,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -993,7 +1589,13 @@
       "file_name": "frame_000108.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 107,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -1002,7 +1604,13 @@
       "file_name": "frame_000109.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 108,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -1011,7 +1619,13 @@
       "file_name": "frame_000110.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 109,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -1020,7 +1634,13 @@
       "file_name": "frame_000111.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 110,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -1029,7 +1649,13 @@
       "file_name": "frame_000112.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 111,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     },
@@ -1038,7 +1664,13 @@
       "file_name": "frame_000113.jpg",
       "width": 640,
       "height": 360,
-      "behaviours": [],
+      "frame_index": 112,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
       "behaviour": null,
       "comment": ""
     }
@@ -1049,24 +1681,575 @@
       "image_id": 1,
       "category_id": 1,
       "bbox": [
-        70.0,
-        105.28125,
-        494.0,
-        225.0
+        277.87,
+        30.96,
+        176.98000000000002,
+        271.1
       ],
-      "area": 111150.0,
+      "area": 47979.278000000006,
       "iscrowd": 0,
       "behaviours": [
         "flashback",
         "hyper_arousal"
       ],
-      "behaviour": null
+      "behaviour": null,
+      "object_id": "det_1790518391945_17_c8eb60",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.8863784074783325,
+      "source": "detection"
+    },
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 2,
+      "bbox": [
+        2.15,
+        195.93,
+        257.34000000000003,
+        118.77999999999997
+      ],
+      "area": 30566.845199999996,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790564681405_3_1991e1",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.4821382761001587,
+      "source": "detection"
+    },
+    {
+      "id": 3,
+      "image_id": 1,
+      "category_id": 2,
+      "bbox": [
+        554.58,
+        126.13,
+        50.39999999999998,
+        172.31
+      ],
+      "area": 8684.423999999995,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "hyper_arousal"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790518391945_18_49e083",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": null,
+      "source": "detection"
+    },
+    {
+      "id": 4,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [
+        1.36,
+        196.37,
+        248.73999999999998,
+        125.99000000000001
+      ],
+      "area": 31338.7526,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790564701843_6_5112e5",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.5491225123405457,
+      "source": "detection"
+    },
+    {
+      "id": 5,
+      "image_id": 2,
+      "category_id": 1,
+      "bbox": [
+        555.85,
+        127.94,
+        50.389999999999986,
+        172.95999999999998
+      ],
+      "area": 8715.454399999997,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518391945_18_49e083",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 6,
+      "image_id": 3,
+      "category_id": 1,
+      "bbox": [
+        555.61,
+        127.45,
+        50.69999999999993,
+        173.81
+      ],
+      "area": 8812.166999999989,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518391945_18_49e083",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 7,
+      "image_id": 5,
+      "category_id": 1,
+      "bbox": [
+        276.65,
+        37.32,
+        330.22,
+        266.6
+      ],
+      "area": 88036.65200000002,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790566551820_6_c14069",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.9052780866622925,
+      "source": "detection"
+    },
+    {
+      "id": 8,
+      "image_id": 5,
+      "category_id": 2,
+      "bbox": [
+        1.06,
+        44.35,
+        250.13,
+        258.04999999999995
+      ],
+      "area": 64546.04649999999,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790566551820_7_5f29ef",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.8146507143974304,
+      "source": "detection"
+    },
+    {
+      "id": 9,
+      "image_id": 6,
+      "category_id": 1,
+      "bbox": [
+        275.19,
+        36.99,
+        330.15000000000003,
+        263.15
+      ],
+      "area": 86878.9725,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518711474_3_293b29",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.9048241972923279,
+      "source": "detection"
+    },
+    {
+      "id": 10,
+      "image_id": 6,
+      "category_id": 2,
+      "bbox": [
+        2.23,
+        44.48,
+        251.59,
+        257.9
+      ],
+      "area": 64885.060999999994,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518711475_4_797905",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.8647707104682922,
+      "source": "detection"
+    },
+    {
+      "id": 11,
+      "image_id": 7,
+      "category_id": 2,
+      "bbox": [
+        1.95,
+        41.28,
+        257.35,
+        258.74
+      ],
+      "area": 66586.739,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518277866_11_9f1170",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.888560950756073,
+      "source": "detection"
+    },
+    {
+      "id": 12,
+      "image_id": 7,
+      "category_id": 1,
+      "bbox": [
+        274.22,
+        26.0,
+        329.27,
+        278.16
+      ],
+      "area": 91589.7432,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518277866_12_165f55",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.8836973309516907,
+      "source": "detection"
+    },
+    {
+      "id": 13,
+      "image_id": 8,
+      "category_id": 2,
+      "bbox": [
+        1.55,
+        46.27,
+        255.47999999999996,
+        253.87999999999997
+      ],
+      "area": 64861.262399999985,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790518315011_15_86f9bb",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.9023579955101013,
+      "source": "detection"
+    },
+    {
+      "id": 14,
+      "image_id": 8,
+      "category_id": 1,
+      "bbox": [
+        277.04,
+        18.09,
+        323.96,
+        282.64000000000004
+      ],
+      "area": 91564.05440000001,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790518315011_16_7cd19b",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.8988595008850098,
+      "source": "detection"
+    },
+    {
+      "id": 15,
+      "image_id": 84,
+      "category_id": 1,
+      "bbox": [
+        78.43,
+        37.33,
+        275.08,
+        264.97
+      ],
+      "area": 72887.9476,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790518793789_5_6ed2d1",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.7620980143547058,
+      "source": "detection"
+    },
+    {
+      "id": 16,
+      "image_id": 91,
+      "category_id": 1,
+      "bbox": [
+        77.15,
+        42.01,
+        281.63,
+        258.39
+      ],
+      "area": 72770.37569999999,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566598931_8_983b49",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "detection"
+    },
+    {
+      "id": 17,
+      "image_id": 92,
+      "category_id": 1,
+      "bbox": [
+        97.97,
+        39.47,
+        257.48,
+        261.91999999999996
+      ],
+      "area": 67439.16159999999,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566598931_8_983b49",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 18,
+      "image_id": 93,
+      "category_id": 1,
+      "bbox": [
+        82.23,
+        36.51,
+        261.84,
+        264.32
+      ],
+      "area": 69209.54879999999,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566598931_8_983b49",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 19,
+      "image_id": 94,
+      "category_id": 1,
+      "bbox": [
+        62.06,
+        39.23,
+        281.58,
+        263.29999999999995
+      ],
+      "area": 74140.01399999998,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566598931_8_983b49",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 20,
+      "image_id": 95,
+      "category_id": 1,
+      "bbox": [
+        53.18,
+        40.07,
+        289.3,
+        259.98
+      ],
+      "area": 75212.214,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566598931_8_983b49",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 21,
+      "image_id": 96,
+      "category_id": 1,
+      "bbox": [
+        48.14,
+        35.75,
+        288.92,
+        266.36
+      ],
+      "area": 76956.73120000001,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566598931_8_983b49",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "tracker"
+    },
+    {
+      "id": 22,
+      "image_id": 102,
+      "category_id": 1,
+      "bbox": [
+        92.63,
+        0.0,
+        221.41000000000003,
+        263.72
+      ],
+      "area": 58390.24520000001,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566644126_9_1b07f8",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.4683133065700531,
+      "source": "manual"
+    },
+    {
+      "id": 23,
+      "image_id": 105,
+      "category_id": 1,
+      "bbox": [
+        43.81,
+        40.16,
+        235.98000000000002,
+        261.0
+      ],
+      "area": 61590.780000000006,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790566669000_10_46119e",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": null,
+      "source": "detection"
+    },
+    {
+      "id": 24,
+      "image_id": 113,
+      "category_id": 1,
+      "bbox": [
+        3.49,
+        25.14,
+        268.69,
+        276.90000000000003
+      ],
+      "area": 74400.26100000001,
+      "iscrowd": 0,
+      "behaviours": [
+        "flashback",
+        "avoidance",
+        "hyper_arousal",
+        "negative_emotion"
+      ],
+      "behaviour": null,
+      "object_id": "det_1790517952505_6_5f4577",
+      "is_poi": true,
+      "poi_locked": false,
+      "score": 0.5101332664489746,
+      "source": "manual"
+    },
+    {
+      "id": 25,
+      "image_id": 113,
+      "category_id": 2,
+      "bbox": [
+        124.6,
+        38.51,
+        152.77,
+        260.28000000000003
+      ],
+      "area": 39762.975600000005,
+      "iscrowd": 0,
+      "behaviours": [],
+      "behaviour": null,
+      "object_id": "det_1790517952505_7_9ea3cb",
+      "is_poi": false,
+      "poi_locked": false,
+      "score": 0.3558131158351898,
+      "source": "detection"
     }
   ],
   "categories": [
     {
       "id": 1,
       "name": "person_of_interest"
+    },
+    {
+      "id": 2,
+      "name": "person"
+    },
+    {
+      "id": 3,
+      "name": "other"
     }
   ]
 }

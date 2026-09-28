@@ -1,0 +1,20 @@
+{
+  "video_id": "source_2",
+  "source_path": "D:\\Github\\TraumaBehaviorClassification\\data\\source\\_uploads\\source.mp4",
+  "source_name": "source.mp4",
+  "rel_path": "source.mp4",
+  "group": "_uploads",
+  "order": 0,
+  "root": "D:\\Github\\TraumaBehaviorClassification\\data\\source\\_uploads",
+  "status": "ready",
+  "error": null,
+  "frames_version": 1790517935,
+  "num_frames": 1682,
+  "fps": 29.97,
+  "src_fps": 29.97,
+  "width": 640,
+  "height": 360,
+  "duration": 56.12278945612279,
+  "engine": "opencv",
+  "vip_done": true
+}

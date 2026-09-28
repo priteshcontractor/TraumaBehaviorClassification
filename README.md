@@ -1,29 +1,12 @@
 # Trauma Behaviour Video Annotator
 
-Local browser tool for labelling trauma-related behaviours on video frames.
-Built with **FastAPI** (Python) + a vanilla JS frontend. Runs on your machine — no cloud.
+Local browser tool for labelling trauma-related behaviours and the person of interest (VIP / POI)
+in videos. FastAPI backend + vanilla JS frontend, YOLO11 + ByteTrack for people. Runs fully on your
+machine.
 
 ---
 
-## What you can do
-
-| Feature | Description |
-|--------|-------------|
-| **Load video** | Upload MP4/MOV/AVI/MKV; frames are extracted in the app (ffmpeg or OpenCV) |
-| **Load frames** | Upload images or a ZIP of frames |
-| **Import JSON** | Merge working `annotations.json` or COCO onto the open video |
-| **Conflict handling** | If a video id already exists: Open / Re-extract keep / Wipe (with backup) / New folder |
-| **Detect people** | YOLO person detection (≥ 35% confidence). Object list appears under the frame |
-| **Object list** | Confirm (OK), edit label, set behaviours per person, Delete one row, Clear all |
-| **POI (red)** | Exactly one Person of Interest — always drawn in **red**; other IDs use fixed colors |
-| **Multi-select behaviours** | Flashback, Avoidance, Negative emotion, Hyperarousal, Normal (per object + per frame) |
-| **Trauma / No Trauma** | Video-level label + comments + scenario/context |
-| **Track forward** | Propagate POI box and/or labels across frames (with options + undo) |
-| **Export** | `annotations.json` and COCO (`*_coco.json`) |
-
----
-
-## Install
+## Install (once)
 
 ```bash
 py -m venv .venv
@@ -32,209 +15,166 @@ py -m venv .venv
 py -m pip install -r requirements.txt
 ```
 
-Optional: put [ffmpeg](https://ffmpeg.org/) on your PATH for faster video extraction.
-Otherwise OpenCV (in `requirements.txt`) is used.
+Optional: put [ffmpeg](https://ffmpeg.org/) on your PATH for faster frame extraction (OpenCV is used
+otherwise). The default YOLO model is *small* (`yolo11s.pt`); *nano* (`yolo11n.pt`, fastest) and
+*medium* (`yolo11m.pt`) can be picked in *Detection settings*. Weight files next to `app.py` are
+used directly, missing ones download on first use.
 
 ---
 
-## Run
+## Run the annotator
 
 ```bash
 py app.py --data ./data
 ```
 
-Open **http://127.0.0.1:8000/**
+Open **http://127.0.0.1:8000/** (options: `--port 8001`, `--host`, `--data <folder>`).
+After updating the code, restart the server and hard-refresh the browser (`Ctrl+F5`).
 
-Options: `--host`, `--port`, `--data`.
+### Workflow
 
-If port 8000 is busy:
+1. **Open folder…** (left sidebar) — type or *Browse…* to a folder such as `D:\Trauma_Dataset_Input`.
+   Every video in it **and all sub-folders** is listed immediately in the sidebar (grouped by
+   folder, natural order) and extracted **one after another** in the background.
+   - *Extract FPS*: blank = every frame; `5` is a good default for long recordings.
+   - *Pre-fill Trauma / No trauma from folder names*: a path containing `no trauma`, `non trauma`
+     or `without trauma` → **No trauma**, any other path containing `trauma` → **Trauma**.
+     `P001` / `S001` in the path pre-fill Participant / Session ID.
+   - *Detect + track people after extraction*: runs Detect + track (whole video, largest person =
+     POI) on each video automatically.
+   - Already-imported videos are skipped unless *Re-extract* is ticked.
+2. Click a video in the sidebar (or `PgUp` / `PgDn`). The first ready video opens automatically.
+3. **Video label** — Trauma / No trauma, participant, session, comments, context.
+4. **Person of interest** (red box, exactly one per frame):
+   - **Detect + track all frames** (`Shift+D`) — one click: detects every person in every frame
+     (upright, plus people lying down when *Find people lying down* is on), tracks them with stable
+     IDs (ByteTrack; fresh IDs after a scene cut) and marks the POI. Runs as a background job with
+     progress and Cancel; nothing changes until it finishes, and **Undo** reverts it. Behaviours,
+     hand-drawn boxes and POIs you chose yourself are always kept; earlier automatic boxes in the
+     range are replaced. It uses the model, lying-down option and minimum confidence (for
+     lying-down boxes) from *Detection settings*; tracking runs at 640 px.
+     The line under the button shows the current options; **⚙** changes them (remembered):
+     - *Frames*: **Whole video** (default) or **From this frame to the end**.
+     - *Person of interest*: **Largest visible person** (default) — switches to someone else only
+       when that person is clearly larger (≥ 1.15× the box area for 2 frames) or the POI is gone,
+       and re-selects at scene cuts; while the POI is briefly hidden the largest visible person
+       stands in. Or **Follow the current red POI** — the red box on the current frame is matched to
+       a tracked person, who stays the POI before and after that frame for the whole shot (tracker
+       ID, then re-matching by position, never switching to someone who was visible at the same
+       time). Following stops at a scene cut or when the person is gone for 15 frames; from there
+       the POI stays as it was (none on a fresh video), so nobody else is picked silently. The app
+       jumps to that frame: double-click the person and run again with *From this frame*.
+   - **Detect frame** (`D`) — people on this frame; the largest one becomes the POI, unless you
+     chose the POI yourself.
+   - **Draw** a box by dragging on the image (the first box becomes the POI); drag to move, drag
+     corners to resize, **double-click** a box (or *Make POI* / `P`) to make it the POI.
+     A POI you pick, draw or move is locked: Detect and Detect + track won't replace it.
+   - **Track forward** (`T`) — follows the red box to the end / next N frames. Uses ByteTrack IDs,
+     re-matches after misses and falls back to a visual tracker for people YOLO can't see
+     (e.g. lying under a blanket). Stops at scene cuts or when the person is lost.
+   - **Undo** (`Ctrl+Z`) reverts the last Detect + track / Track / Fill.
+5. **Behaviour** — toggle `1`–`5` (Flashback, Avoidance, Negative emotion, Hyperarousal, Normal)
+   on the frame, then **Fill until next label** (`F`) or *Next N → Apply* to spread it.
+   The timeline under the image shows labelled ranges in colour.
+6. **Export** — everything autosaves. *Export all videos* writes the dataset files below.
 
-```bash
-py app.py --port 8001
-```
+Background jobs (extraction, Detect + track, tracking) show in the sidebar with progress and a ✕ to cancel.
 
-After code updates, **restart the server** and hard-refresh the browser (`Ctrl+F5`).
-
----
-
-## How to use (updated workflow)
-
-### 1. Import media
-1. Click **Load video…** (or **Load frames…**).
-2. Optionally set **Extract FPS** (blank = all frames).
-3. If that video id already exists, choose:
-   - **Open existing** (safest)
-   - **Re-extract, keep annotations**
-   - **Re-extract & wipe** (type the video id to confirm; a backup is kept)
-   - **Save as new folder**
-4. A wait popup appears while frames are extracted.
-
-### 2. Navigate frames
-- Scrubber, ◀ ▶, **Space** (play/pause), **Home** / **End**
-- Zoom: **+** / **−** / **Fit**, or `Ctrl` + mouse wheel
-- Collapse the left sidebar with **«** for a larger frame
-
-### 3. Detect people
-1. Adjust **Min conf** (floor is **35%** — lower scores are ignored).
-2. Prefer **Size 960** and **nano** model for speed; enable **Augment** only if lying/bed poses are missed.
-3. Click **Detect** (`D`). Wait popup shows while YOLO runs.
-4. The **object list** appears under the frame. A **smart POI** is chosen automatically (highest confidence + larger + more central person) and drawn in **red**.
-5. Change the POI anytime: click **POI** on another row, or set label to *Person of interest*. Only one POI is allowed.
-
-### 4. Object list (under the frame)
-For each detected person:
-
-| Column | Action |
-|--------|--------|
-| **OK** | Confirm this detection |
-| **ID** | Color-coded id (1 green, 2 blue, 3 amber…) |
-| **Role** | Shows **POI** if this is the person of interest |
-| **Label** | Person of interest / Person / Other |
-| **Behaviours** | Tick Flash / Avoid / Neg. / Hyper / Normal **for that person** |
-| **POI** | Make this the only red Person of Interest |
-| **Delete** | Remove **this** object only (others stay) |
-
-Also:
-- **Confirm all** — confirm every detection; smart POI if none set
-- **Apply confirmed** — write the confirmed object list onto this frame, or onto the next **N** frames. **The same person keeps the same ID** across those frames.
-- **Existing boxes** (dropdown):
-  - **Replace them (default):** remove previous boxes on those frames, then write the confirmed list
-  - **Keep them & add new:** leave existing boxes; add the confirmed ones (near-duplicates / same ID skipped)
-- **Clear all objects** — wipe objects on this frame (asks to confirm)
-
-**Track** also keeps one stable ID for the POI across all tracked frames.
-
-**Smart POI (automatic)**  
-After Detect, one person is marked POI (red) using a score from:
-1. Detection confidence (~45%)
-2. Bounding-box size (~35%) — larger person preferred
-3. How central they are in the frame (~20%)
-
-If you already had a POI, it is kept. Change anytime with the **POI** button (only one POI allowed).
-
-**Why some people are missed**  
-YOLO only returns the COCO *person* class, and scores below **35%** are dropped. Lying down, under blankets, far away, blurred, or heavily occluded people often score low or are missed — especially with the fast nano model. Raise Size / use small–medium model / turn Augment on, or draw the box manually.
-
-### 5. Frame & video labels
-- **Frame behaviour** chips (keys `1`–`5`) — whole-frame labels
-- **Trauma / No Trauma** — video-level
-- Comments (video + frame) and **Context / scenario**
-
-### 6. Track forward
-1. Ensure a red **POI** box exists.
-2. Click **Track…** (`T`) and choose:
-   - Propagate box / behaviours / comment
-   - Range (to end or next N frames)
-   - Overwrite options, stop-if-lost, IoU
-3. **Preview** or **Track**. Wait popup appears for long runs.
-4. **Undo** restores the previous snapshot of affected frames.
-5. `Shift+T` repeats the last track settings.
-
-### 7. Export
-- Download **JSON** or **COCO** from the Export panel.
-- **Rebuild all COCO** refreshes COCO files for every video folder.
-- Working file is always `data/<video>/annotations.json`.
-- COCO is also written on track/apply/export (lightweight edits do not rebuild COCO every click, for speed).
-
----
-
-## Keyboard shortcuts
+### Keyboard shortcuts (`?` in the app)
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| ← → | Previous / next frame | `1`–`5` | Toggle frame behaviours |
-| Home / End | First / last frame | `D` | Detect people |
-| Space | Play / pause | `T` | Track options |
-| Del | Delete selected object | `Shift+T` | Track with last options |
-| `+` / `-` / `0` | Zoom in / out / fit | `A` | Apply confirmed objects |
+| ← → (`Shift` ×10) | Previous / next frame | `1`–`5` | Toggle behaviour |
+| Home / End | First / last frame | `F` | Fill until next label |
+| Space | Play / pause | `D` | Detect people |
+| PgUp / PgDn | Previous / next video | `Shift+D` | Detect + track all frames |
+| | | `T` / `Shift+T` | Track / repeat last settings |
+| `P` | Selected box → POI | Del | Delete selected box |
+| `Ctrl+Z` | Undo | `+` `-` `0` | Zoom in / out / fit |
 
 ---
 
-## Colors
+## Batch VIP script (no browser)
 
-| Role | Color |
-|------|--------|
-| **POI** (person of interest) | Always **red** |
-| Object ID 1 | Green |
-| Object ID 2 | Blue |
-| Object ID 3 | Amber |
-| ID 4+ | Purple, cyan, pink, … |
+`trauma_vip_annotation.py` uses the same engine as the app and writes into the same data folder,
+so you can pre-process a whole dataset and then review it in the annotator:
 
-Pending (unconfirmed) detections are drawn with a **dashed** outline.
+```bash
+py trauma_vip_annotation.py --input "D:\Trauma_Dataset_Input" --data ./data --fps 5
+```
+
+| Option | Meaning |
+|--------|---------|
+| `--fps 5` | Extraction rate (default: every frame) |
+| `--model yolo11n.pt` | YOLO weights: `yolo11n.pt` (fastest), `yolo11s.pt` (default), `yolo11m.pt` (most accurate) |
+| `--imgsz 960` | Detection size (default 640) |
+| `--preview` | Also render `<video>_vip_preview.mp4` with the VIP in red |
+| `--skip-vip` | Only extract + pre-fill labels |
+| `--reextract` | Re-extract videos already in the data folder |
+| `--no-folder-labels` | Don't guess Trauma / No trauma from folder names |
 
 ---
 
-## Output format
-
-Per video folder under `--data`:
+## Output
 
 ```
 data/
-└── video_001/
-    ├── frame_000001.jpg
-    ├── …
-    ├── annotations.json
-    ├── video_001_coco.json
-    └── annotations.backup.<timestamp>.json   # after wipe / re-extract
+├── <video_id>/                      parent folder + file name, e.g. P001_S001_clip_a
+│   ├── frame_000001.jpg …
+│   ├── meta.json                    source path, fps, size, group
+│   ├── annotations.json             working record (autosaved)
+│   └── <video_id>_coco.json         COCO, kept up to date automatically
+└── _exports/                        written by "Export all videos"
+    ├── all_annotations.json         every video: id, filename, labels, per-frame bbox + behaviours
+    ├── metadata.csv / metadata.xlsx one row per behaviour segment
+    └── videos/<video_id>_annotations.json + _coco.json
 ```
 
-### `annotations.json` (working record)
+`metadata.csv` columns:
+`# | participant_id | session_id | filename | modality | start_time | end_time | behavioral | trauma_label | video_id | start_frame | end_frame`
+
+Per-frame record in `all_annotations.json`:
 
 ```json
-{
-  "video_id": "video_001",
-  "video_label": "trauma",
-  "video_comment": "",
-  "context": "",
-  "frames": {
-    "frame_000001.jpg": {
-      "behaviours": ["flashback"],
-      "comment": "",
-      "bbox": [120, 40, 380, 460],
-      "objects": [
-        {
-          "id": "obj_…",
-          "bbox": [120, 40, 380, 460],
-          "label": "person_of_interest",
-          "behaviours": ["flashback", "hyper_arousal"],
-          "confirmed": true,
-          "is_poi": true,
-          "conf": 0.81,
-          "source": "detection"
-        }
-      ]
-    }
-  }
+"frame_000042.jpg": {
+  "index": 41, "time": 8.2,
+  "behaviours": ["flashback"],
+  "comment": "",
+  "bbox": [120, 40, 380, 460],
+  "objects": [
+    {"id": "track_3", "bbox": [120, 40, 380, 460], "label": "person_of_interest",
+     "is_poi": true, "poi_locked": false, "conf": 0.81, "source": "auto_vip", "behaviours": ["flashback"]}
+  ]
 }
 ```
 
-### COCO
-
-- Category includes `person_of_interest`, `person`, `other`
-- Boxes are COCO `xywh` in pixels
-- Video label / context live in `info`; per-frame and per-object behaviours ride on images/annotations
+`bbox` is always the POI box in pixels `[x1, y1, x2, y2]`; COCO files use `xywh`.
 
 ---
 
-## Tips for better detection (e.g. person on a bed)
+## Tips
 
-YOLO often misses **lying / covered** people. Try:
-
-1. Larger **Size** (1280+) and **small/medium** model  
-2. Turn **Augment** on  
-3. Or **draw** the POI box manually, then **Track**
-
-Detections below **35%** confidence are always discarded.
+- People lying in bed / on the floor: *Detection settings* → *Find people lying down* (on by default)
+  also runs the detector on the frame rotated 90° both ways, so horizontal bodies are found.
+- Other missed people (covered, far away, blurred): model *medium* and *Augment*; or just draw
+  the box and **Track**. Image sizes above the video's own resolution don't help.
+- Wrong POI after Detect + track: double-click the right person, then **⚙ → Follow the current
+  red POI** (re-runs detection and keeps that person as POI through the shot) or **Track forward**.
+- API: `POST /api/detect-track/<video_id>` with `{"start": 0, "poi": "largest" | "follow",
+  "seed_frame": 12, "seed_box": [x1, y1, x2, y2], "model": "yolo11s.pt", "lying": true, "conf": 0.35}`
+  queues the same job (`/api/auto-vip/<video_id>` = whole video, largest person).
+- Any existing `data/<video>` folders from older versions still open (listed under *Uploads*).
 
 ---
 
 ## Project files
 
 ```
-app.py              FastAPI backend (import, detect, track, annotate, export)
-static/index.html   UI
-static/style.css    Layout / theme
-static/app.js       Canvas, object table, autosave, wait overlay
+app.py                     FastAPI backend (library, import, jobs, detect, track, export)
+vip.py                     Shared YOLO / ByteTrack / VIP selection / single-target tracker
+trauma_vip_annotation.py   Batch CLI (import folder + Auto-VIP + preview video)
+static/index.html          UI
+static/app.js              Frontend logic
+static/style.css           Theme
 requirements.txt
-README.md
 ```
