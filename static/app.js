@@ -39,6 +39,7 @@ const state = {
   waiters: new Map(),
   overlayJob: null,
   pollTimer: null,
+  jobsHideTimer: null,
   lastVideoRefresh: 0,
   pendingImport: null,
   pendingDelete: null,
@@ -510,12 +511,12 @@ function renderLibrary() {
         <span class="gcount">${done}/${items.length}</span></button>
       <div class="group-items">`);
     items.forEach((v) => {
-      const { text, bar, actions } = videoRowInfo(v);
+      const { text, bar, actions, cls } = videoRowInfo(v);
       const lab = v.video_label === "trauma" ? `<span class="vi-label trauma">Trauma</span>`
         : v.video_label === "no_trauma" ? `<span class="vi-label no-trauma">No trauma</span>` : "";
       const needsAction = v.status !== "ready";
       html.push(`<div class="vid-row${needsAction ? " needs-action" : ""}" data-vid="${escapeHtml(v.id)}">
-        <button type="button" class="vid-item ${v.status}${v.id === state.vid ? " active" : ""}" data-vid="${escapeHtml(v.id)}" title="${escapeHtml(v.name)}">
+        <button type="button" class="vid-item ${v.status}${cls ? ` ${cls}` : ""}${v.id === state.vid ? " active" : ""}" data-vid="${escapeHtml(v.id)}" title="${escapeHtml(v.name)}">
         <span class="vi-status"></span>
         <span class="vi-main"><span class="vi-name">${escapeHtml(v.name)}</span>
           <span class="vi-meta" title="${escapeHtml(text)}">${escapeHtml(text)}</span>
@@ -579,6 +580,7 @@ function videoRowInfo(v) {
   const actions = [];
   let text;
   let bar = "";
+  let cls = "";
   if (v.status === "extracting") {
     const x = v.extract || {};
     const n = Math.max(x.frames || 0, v.num_frames || 0);
@@ -601,13 +603,22 @@ function videoRowInfo(v) {
     const ml = activeJobsFor(v.id).find((j) => TRACKING_KINDS.includes(j.kind));
     if (ml) {
       const what = ml.kind === "track" ? "Tracking" : ml.kind === "auto_vip" ? "Auto-VIP" : "Detect + track";
-      text = `${what} ${ml.status === "queued" ? "waiting in queue" : `running · ${Math.round((ml.progress || 0) * 100)}%`}`;
+      if (ml.status === "queued") {
+        const line = state.jobs.filter((j) => j.lane === ml.lane && j.status === "queued").sort((a, b) => a.created - b.created);
+        text = `queued for ${what} (#${line.indexOf(ml) + 1} in line)`;
+        cls = "ml-queued";
+      } else {
+        const p = Math.round((ml.progress || 0) * 100);
+        text = `${what} running · ${p}%`;
+        bar = `<span class="vi-bar ml"><i style="width:${p}%"></i></span>`;
+        cls = "ml-running";
+      }
       actions.push(["cancel-ml", "Cancel", `Cancel ${what} for this video`]);
     } else {
       actions.push(["detect", "Detect + track", "Detect + track people in every frame of this video (background job)"]);
     }
   }
-  return { text, bar, actions };
+  return { text, bar, actions, cls };
 }
 
 function videoMenuItems(v) {
@@ -1815,6 +1826,16 @@ async function stopAllJobs() {
   kickJobs();
 }
 
+async function cancelQueuedJobs(kind) {
+  try {
+    const res = await api("/api/jobs/cancel-all", { json: { kind, queued_only: true } });
+    toast(`Cancelled ${res.cancelled} queued job(s) — the running one carries on`, "ok");
+  } catch (e) {
+    toast(e.message, "error");
+  }
+  kickJobs();
+}
+
 async function pollJobs(initial = false) {
   clearTimeout(state.pollTimer);
   let jobs = [];
@@ -1862,27 +1883,91 @@ async function pollJobs(initial = false) {
   if (active || state.waiters.size) state.pollTimer = setTimeout(() => pollJobs(), 1000);
 }
 
+const JOB_KIND_PLURAL = {
+  import: "imports", extract: "extractions", auto_vip: "Auto-VIP jobs", detect_track: "Detect + track jobs", track: "Track jobs",
+};
+
+// Remembered once the user toggles; until then collapsed whenever more than 2 jobs are waiting or running
+function jobsPanelCollapsed(activeCount) {
+  const pref = localStorage.getItem("jobsPanel");
+  return pref ? pref === "collapsed" : activeCount > 2;
+}
+
 function renderJobs() {
   const panel = $("jobs-panel");
   const now = Date.now() / 1000;
-  const isActive = (j) => ["queued", "running"].includes(j.status);
-  const shown = state.jobs.filter((j) => isActive(j) || (j.finished && now - j.finished < 8));
-  const active = shown.filter(isActive).length;
+  const byCreated = (a, b) => a.created - b.created;
+  const running = state.jobs.filter((j) => j.status === "running").sort(byCreated);
+  const queued = state.jobs.filter((j) => j.status === "queued").sort(byCreated);
+  const recent = state.jobs.filter((j) => j.finished && !["queued", "running"].includes(j.status) && now - j.finished < 8)
+    .sort((a, b) => b.finished - a.finished);
+  clearTimeout(state.jobsHideTimer);
+  if (recent.length) state.jobsHideTimer = setTimeout(renderJobs, 1000);
+  const nActive = running.length + queued.length;
+  if (!nActive && !recent.length) {
+    panel.innerHTML = "";
+    return;
+  }
+  const collapsed = jobsPanelCollapsed(nActive);
+  const scroll = panel.querySelector(".jobs-body")?.scrollTop || 0;
+  const pct = (j) => `${Math.round((j.progress || 0) * 100)}%`;
   const stopLabel = (j) => (j.kind === "import" && !j.video_id ? "Stop import"
     : ["import", "extract"].includes(j.kind) ? "Stop" : "Cancel");
-  const head = active ? `<div class="jobs-head"><span class="small muted">${active} job${active > 1 ? "s" : ""} running or waiting</span>
-    <button type="button" class="danger small-btn" id="btn-stop-all" title="Stop the import and cancel every Auto-VIP / Detect + track job">Stop all</button></div>` : "";
-  panel.innerHTML = head + shown.map((j) => `
-    <div class="job ${j.status}">
-      <div class="job-top"><span class="job-title" title="${escapeHtml(j.title)}">${escapeHtml(j.title)}</span>
-        ${isActive(j)
-          ? (j.cancel_requested ? `<span class="small muted">stopping…</span>`
-            : `<button type="button" class="small-btn job-stop" data-cancel="${j.id}" title="${stopLabel(j)}">${stopLabel(j)}</button>`)
-          : `<span class="small">${j.status}</span>`}</div>
-      <div class="progress"><div style="width:${Math.round((j.progress || 0) * 100)}%"></div></div>
-      <div class="muted small job-msg" title="${escapeHtml(j.message || "")}">${escapeHtml(j.status === "queued" ? "Waiting in queue…" : j.message || "")}</div>
-    </div>`).join("");
+  const row = (j, withMsg = false) => {
+    const active = ["queued", "running"].includes(j.status);
+    const info = j.cancel_requested && active ? "stopping…"
+      : j.status === "running" ? pct(j) : j.status === "queued" ? "queued" : j.status === "error" ? "failed" : j.status;
+    const tip = `${j.title}${j.status === "queued" ? " — waiting in queue" : j.message ? ` — ${j.message}` : ""}`;
+    return `<div class="jrow ${j.status}" title="${escapeHtml(tip)}">
+      <span class="jrow-title">${escapeHtml(j.title)}</span><span class="jrow-info">${info}</span>
+      ${active && !j.cancel_requested
+        ? `<button type="button" class="jrow-x" data-cancel="${j.id}" title="${stopLabel(j)}" aria-label="${stopLabel(j)}">✕</button>`
+        : "<span></span>"}
+      ${j.status === "running" ? `<span class="jrow-bar"><i style="width:${pct(j)}"></i></span>` : ""}
+      ${withMsg && j.status === "running" && j.message ? `<span class="jrow-msg">${escapeHtml(j.message)}</span>` : ""}
+    </div>`;
+  };
+
+  const parts = [];
+  if (running.length) parts.push(`${running.length} running`);
+  if (queued.length) parts.push(`${queued.length} queued`);
+  if (!nActive) parts.push(`${recent.length} finished`);
+  const head = `<div class="jobs-head">
+    <button type="button" class="jobs-toggle" id="btn-jobs-toggle" aria-expanded="${!collapsed}"
+      title="Background jobs: ${parts.join(" · ")} — click to ${collapsed ? "show every job" : "show only the running job"}">
+      <span class="chev">${collapsed ? "▸" : "▾"}</span><span class="jsum">Jobs: ${parts.join(" · ")}</span></button>
+    ${nActive ? `<button type="button" class="danger small-btn" id="btn-stop-all" title="Stop the import and cancel every Auto-VIP / Detect + track job">Stop all</button>` : ""}
+  </div>`;
+
+  const body = [];
+  if (collapsed) {
+    running.forEach((j) => body.push(row(j)));
+    if (!running.length && queued.length) body.push(row(queued[0]));
+  } else {
+    running.forEach((j) => body.push(row(j, true)));
+    const byKind = new Map();
+    queued.forEach((j) => {
+      if (!byKind.has(j.kind)) byKind.set(j.kind, []);
+      byKind.get(j.kind).push(j);
+    });
+    for (const [kind, items] of byKind) {
+      if (items.length >= 3) {
+        body.push(`<div class="jgroup"><span>${items.length} ${JOB_KIND_PLURAL[kind] || "jobs"} queued</span>
+          <button type="button" class="link" data-cancel-kind="${escapeHtml(kind)}" title="Cancel every queued ${JOB_KIND_PLURAL[kind] || "job"} (the running one carries on)">Cancel all queued</button></div>`);
+      }
+      items.forEach((j) => body.push(row(j)));
+    }
+    recent.forEach((j) => body.push(row(j)));
+  }
+  panel.innerHTML = head + (body.length ? `<div class="jobs-body">${body.join("")}</div>` : "");
+  const bodyEl = panel.querySelector(".jobs-body");
+  if (bodyEl) bodyEl.scrollTop = scroll;
+  $("btn-jobs-toggle").onclick = () => {
+    localStorage.setItem("jobsPanel", collapsed ? "expanded" : "collapsed");
+    renderJobs();
+  };
   panel.querySelectorAll("[data-cancel]").forEach((b) => { b.onclick = () => cancelJob(b.dataset.cancel); });
+  panel.querySelectorAll("[data-cancel-kind]").forEach((b) => { b.onclick = () => cancelQueuedJobs(b.dataset.cancelKind); });
   $("btn-stop-all")?.addEventListener("click", stopAllJobs);
 }
 

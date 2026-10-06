@@ -1014,6 +1014,7 @@ def extract_frames(src: Path, out_dir: Path, fps: float | None = None,
 
 _jobs: dict[str, dict] = {}
 _job_queues: dict[str, queue.Queue] = {"import": queue.Queue(), "ml": queue.Queue()}
+_job_threads: dict[str, threading.Thread] = {}
 _workers_started = False
 
 
@@ -1035,6 +1036,7 @@ def submit_job(kind: str, lane: str, title: str, fn: Callable[[dict], Any], vide
         "result": None,
         "error": None,
         "created": time.time(),
+        "started": None,
         "finished": None,
         "cancel": False,
     }
@@ -1071,28 +1073,46 @@ def _prune_jobs() -> None:
         _jobs.pop(j["id"], None)
 
 
+def _run_one_job(job: dict, fn: Callable[[dict], Any]) -> None:
+    if job["cancel"]:
+        if not job["finished"]:
+            job.update(status="cancelled", message="Cancelled", finished=time.time())
+        return
+    job.update(status="running", message="Starting…", started=time.time())
+    try:
+        job["result"] = fn(job)
+        job.update(status="done", progress=1.0)
+        if job["message"] in ("Starting…", ""):
+            job["message"] = "Done"
+    except JobCancelled:
+        job.update(status="cancelled", message="Stopped")
+    except ExtractSkipped:
+        job.update(status="cancelled", message="Skipped")
+    except BaseException as e:  # noqa: BLE001 — anything (incl. SystemExit from a library) must not kill the lane
+        job.update(status="error", error=f"{type(e).__name__}: {e}"[:500], message=str(e)[:300] or type(e).__name__)
+        try:
+            traceback.print_exc()
+        except Exception:  # noqa: BLE001
+            pass
+    finally:
+        job["finished"] = time.time()
+
+
 def _job_worker(lane: str) -> None:
+    """One worker per lane: jobs of a lane run strictly one after another, oldest first."""
     q = _job_queues[lane]
     while True:
         job, fn = q.get()
-        if job["cancel"]:
-            if not job["finished"]:
-                job.update(status="cancelled", message="Cancelled", finished=time.time())
-            continue
-        job.update(status="running", message="Starting…")
         try:
-            job["result"] = fn(job)
-            job.update(status="done", progress=1.0)
-            if job["message"] in ("Starting…", ""):
-                job["message"] = "Done"
-        except JobCancelled:
-            job.update(status="cancelled", message="Stopped")
-        except ExtractSkipped:
-            job.update(status="cancelled", message="Skipped")
-        except Exception as e:  # noqa: BLE001
-            traceback.print_exc()
-            job.update(status="error", error=str(e), message=str(e))
-        job["finished"] = time.time()
+            _run_one_job(job, fn)
+        except BaseException:  # noqa: BLE001
+            try:
+                traceback.print_exc()
+            except Exception:  # noqa: BLE001
+                pass
+            if job.get("status") in ("queued", "running"):
+                job.update(status="error", error="Internal job error", message="Internal job error",
+                           finished=time.time())
 
 
 def start_background() -> None:
@@ -1100,9 +1120,20 @@ def start_background() -> None:
     if _workers_started:
         return
     _workers_started = True
-    for lane in _job_queues:
-        threading.Thread(target=_job_worker, args=(lane,), daemon=True, name=f"jobs-{lane}").start()
+    ensure_job_workers()
     threading.Thread(target=_coco_writer_loop, daemon=True, name="coco-writer").start()
+
+
+def ensure_job_workers() -> None:
+    """(Re)start the worker of every lane whose thread is missing or died."""
+    for lane in _job_queues:
+        th = _job_threads.get(lane)
+        if th is None or not th.is_alive():
+            if th is not None:
+                print(f"[jobs] worker for lane '{lane}' had stopped — restarting it", flush=True)
+            th = threading.Thread(target=_job_worker, args=(lane,), daemon=True, name=f"jobs-{lane}")
+            _job_threads[lane] = th
+            th.start()
 
 
 # ----------------------------------------------------------------------------
@@ -2278,7 +2309,11 @@ def api_undo(vid: str):
 
 @app.get("/api/jobs")
 def api_jobs():
-    jobs = sorted(list(_jobs.values()), key=lambda j: j["created"], reverse=True)
+    ensure_job_workers()
+    rank = {"running": 0, "queued": 1}
+    # running first, then queued in the order they will run, then finished (newest first)
+    jobs = sorted(list(_jobs.values()), key=lambda j: (rank.get(j["status"], 2),
+                                                      j["created"] if j["status"] in rank else -(j["finished"] or 0)))
     return {"jobs": [public_job(j) for j in jobs]}
 
 
@@ -2301,12 +2336,16 @@ def api_job_cancel(job_id: str):
 
 class CancelAllRequest(BaseModel):
     lane: str | None = None  # "import" | "ml" | None = every lane
+    kind: str | None = None  # e.g. "auto_vip"; None = every kind
+    queued_only: bool = False  # leave the running job alone
 
 
 @app.post("/api/jobs/cancel-all")
 def api_jobs_cancel_all(req: CancelAllRequest | None = None):
-    lane = req.lane if req else None
-    hit = [j for j in list(_jobs.values()) if j["status"] in ("queued", "running") and (lane is None or j["lane"] == lane)]
+    req = req or CancelAllRequest()
+    states = ("queued",) if req.queued_only else ("queued", "running")
+    hit = [j for j in list(_jobs.values()) if j["status"] in states
+           and (req.lane is None or j["lane"] == req.lane) and (req.kind is None or j["kind"] == req.kind)]
     for j in hit:
         cancel_job(j)
     return {"cancelled": len(hit)}

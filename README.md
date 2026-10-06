@@ -80,8 +80,13 @@ After updating the code, restart the server and hard-refresh the browser (`Ctrl+
    The timeline under the image shows labelled ranges in colour.
 6. **Export** — everything autosaves. *Export all videos* writes the dataset files below.
 
-Background jobs (extraction, Detect + track, tracking) show at the bottom of the sidebar with progress,
-a **Stop import** / **Cancel** button each and **Stop all**.
+Background jobs (extraction, Detect + track, tracking) show in a small panel pinned to the bottom of
+the sidebar, so the video list above always stays usable. Its header (*Jobs: 1 running · 9 queued*)
+has **Stop all**; click it to expand / collapse (remembered; collapsed by default when more than two
+jobs wait). Collapsed it shows only the running job; expanded it lists the running job first, then
+the queued ones in the order they will run (**✕** cancels one, *Cancel all queued* drops a whole
+group while the running job carries on). Auto-VIP / Detect + track jobs run **one at a time**; each
+video row also says *queued for Auto-VIP (#3 in line)* or *Auto-VIP running · 45%*.
 
 ### If an import seems stuck
 

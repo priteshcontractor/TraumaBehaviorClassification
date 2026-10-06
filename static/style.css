@@ -122,6 +122,9 @@ details summary:hover { color: var(--text); }
 .vid-item.extracting .vi-status { background: #f59e0b; animation: pulse 1s infinite alternate; }
 .vid-item.error .vi-status, .vid-item.cancelled .vi-status { background: var(--danger); }
 .vid-item.not_extracted .vi-status { background: #a16207; }
+.vid-item.ml-queued .vi-status { background: transparent; box-shadow: inset 0 0 0 2px #a78bfa; }
+.vid-item.ml-running .vi-status { background: #a78bfa; animation: pulse 1s infinite alternate; }
+.vi-bar.ml i { background: #a78bfa; }
 .vid-item.queued, .vid-item.cancelled, .vid-item.not_extracted { opacity: 0.75; }
 .vid-row { position: relative; border-radius: 8px; }
 .vid-row.needs-action:hover { background: var(--panel-2); }
@@ -162,18 +165,46 @@ details summary:hover { color: var(--text); }
 .vi-label.trauma { background: rgba(229,72,77,0.18); color: #ff8589; }
 .vi-label.no-trauma { background: rgba(48,164,108,0.18); color: #5fd49a; }
 
-.jobs-panel { display: flex; flex-direction: column; gap: 0.4rem; padding: 0 0.6rem; }
-.jobs-panel:not(:empty) { padding: 0.6rem; border-top: 1px solid var(--border); max-height: 40vh; overflow-y: auto; }
-.jobs-head { display: flex; align-items: center; gap: 0.4rem; }
-.jobs-head span { flex: 1; }
-button.small-btn { font-size: 0.74rem; padding: 0.2rem 0.55rem; }
-.job-stop { border-color: var(--danger); color: #ff8589; flex: none; }
-.job { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.55rem; }
-.job.error { border-color: var(--danger); }
-.job.done { border-color: var(--ok); }
-.job-top { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
-.job-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.job-msg { margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Pinned under the video list; never taller than ~30% of the window so the list stays usable */
+.jobs-panel {
+  flex: none; display: flex; flex-direction: column; min-height: 0;
+  max-height: min(30vh, 190px); background: var(--panel-2);
+}
+.jobs-panel:not(:empty) { border-top: 1px solid var(--border); }
+.jobs-head { flex: none; display: flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.45rem 0.3rem 0.3rem; }
+.jobs-toggle {
+  flex: 1; min-width: 0; justify-content: flex-start; background: transparent; border: none;
+  padding: 0.2rem 0.3rem; font-size: 0.76rem; color: var(--text);
+}
+.jobs-toggle:hover { background: var(--panel-3); filter: none; }
+.jobs-toggle .chev { color: var(--muted); width: 0.8rem; flex: none; }
+.jobs-toggle .jsum { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.small-btn { font-size: 0.72rem; padding: 0.15rem 0.5rem; flex: none; }
+.jobs-body { overflow-y: auto; min-height: 0; padding: 0 0.45rem 0.4rem; display: flex; flex-direction: column; gap: 2px; }
+.jrow {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; column-gap: 0.35rem;
+  font-size: 0.74rem; padding: 0.2rem 0.3rem; border-radius: 6px;
+}
+.jrow.running { background: var(--panel-3); }
+.jrow-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jrow.running .jrow-title { font-weight: 600; }
+.jrow.queued .jrow-title { color: var(--muted); }
+.jrow-info { color: var(--muted); font-size: 0.7rem; white-space: nowrap; }
+.jrow.done .jrow-info { color: #5fd49a; }
+.jrow.error .jrow-info { color: #ff8589; }
+button.jrow-x {
+  background: transparent; border: none; color: var(--muted); padding: 0 0.3rem; font-size: 0.75rem; line-height: 1.2;
+}
+button.jrow-x:hover { color: #ff8589; background: var(--panel); filter: none; }
+.jrow-bar { grid-column: 1 / -1; height: 3px; background: var(--bg); border-radius: 2px; overflow: hidden; margin-top: 0.2rem; }
+.jrow-bar i { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
+.jrow-msg { grid-column: 1 / -1; color: var(--muted); font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jgroup {
+  display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: var(--muted);
+  padding: 0.3rem 0.3rem 0.1rem; text-transform: none;
+}
+.jgroup span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jgroup button.link { font-size: 0.72rem; color: #fbbf24; flex: none; }
 .progress { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: 0.35rem; }
 .progress > div { height: 100%; background: var(--accent); transition: width 0.3s; }
 .lib-foot { padding: 0.5rem 0.85rem; border-top: 1px solid var(--border); font-size: 0.74rem; }
