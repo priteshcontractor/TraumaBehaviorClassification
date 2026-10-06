@@ -40,6 +40,7 @@ from urllib.parse import quote
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from PIL import Image
 from pydantic import BaseModel
 
@@ -126,7 +127,7 @@ def atomic_write_text(path: Path, text: str) -> None:
 
 def read_json(path: Path, default: Any) -> Any:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError):
         return default
 
@@ -564,7 +565,15 @@ def video_summary(vid: str) -> dict:
     status = meta.get("status") or ("ready" if stats["num_frames"] else "empty")
     if status == "ready" and not stats["num_frames"]:
         status = "empty"
-    return {
+    if status == "cancelled":
+        status = NOT_EXTRACTED
+    if extraction_orphaned(vid, meta):
+        if meta["status"] == "queued" and stats["num_frames"]:
+            status = "ready"
+        else:
+            status = NOT_EXTRACTED
+            meta = {**meta, "error": "No import is running for it"}
+    out = {
         "id": vid,
         "name": meta.get("source_name") or vid,
         "group": meta.get("group") or "Uploads",
@@ -572,8 +581,16 @@ def video_summary(vid: str) -> dict:
         "status": status,
         "error": meta.get("error"),
         "fps": meta.get("fps"),
+        "extract_fps": meta.get("extract_fps"),
+        "extract_fps_known": "extract_fps" in meta,
         **stats,
     }
+    if status == "extracting":
+        out["extract"] = _extract_live.get(vid)
+    elif status != "ready":
+        src = meta.get("source_path")
+        out["can_extract"] = bool(src and os.path.isfile(src))
+    return out
 
 
 # ----------------------------------------------------------------------------
@@ -592,41 +609,190 @@ def opencv_available() -> bool:
         return False
 
 
-def probe_video(path: Path) -> dict:
-    info = {"fps": None, "width": None, "height": None, "frames": None, "duration": None}
+PROBE_TIMEOUT_S = 30        # ffprobe / OpenCV probe of one file
+EXTRACT_STALL_S = 60        # no new frame and no time advance for this long → kill the extractor
+EXTRACT_MIN_LIMIT_S = 1800  # hard limit per video: max(this, 30 × duration)
+
+
+class JobCancelled(Exception):
+    pass
+
+
+class ExtractSkipped(Exception):
+    """The user skipped this one video; the import goes on with the next."""
+
+
+class ExtractStalled(RuntimeError):
+    pass
+
+
+class ExtractRunaway(ExtractStalled):
+    """Far more frames than the video can contain: broken timestamps make the fps filter fill the gap."""
+
+
+def _no_stop() -> None:
+    return None
+
+
+_kill_job_handle = None
+# extraction yields the CPU to the web server and the UI (it still uses every idle core)
+LOW_PRIORITY = {"creationflags": subprocess.BELOW_NORMAL_PRIORITY_CLASS} if os.name == "nt" else {}
+
+
+def _tie_to_server(proc: subprocess.Popen) -> None:
+    """Windows: put the child in a job object that is closed (and the child killed) when this server
+    process dies, even when it is killed from Task Manager."""
+    global _kill_job_handle
+    if os.name != "nt":
+        return
     try:
-        import cv2  # type: ignore
-        cap = cv2.VideoCapture(str(path))
-        if cap.isOpened():
-            fps = cap.get(cv2.CAP_PROP_FPS) or None
-            n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) or None
-            info.update(
-                fps=round(fps, 3) if fps else None,
-                width=int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or None,
-                height=int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or None,
-                frames=n,
-                duration=(n / fps) if (n and fps) else None,
-            )
-        cap.release()
-    except Exception:
+        import ctypes
+        from ctypes import wintypes
+
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        if _kill_job_handle is None:
+            class Basic(ctypes.Structure):
+                _fields_ = [("PerProcessUserTimeLimit", ctypes.c_int64), ("PerJobUserTimeLimit", ctypes.c_int64),
+                            ("LimitFlags", wintypes.DWORD), ("MinimumWorkingSetSize", ctypes.c_size_t),
+                            ("MaximumWorkingSetSize", ctypes.c_size_t), ("ActiveProcessLimit", wintypes.DWORD),
+                            ("Affinity", ctypes.c_size_t), ("PriorityClass", wintypes.DWORD),
+                            ("SchedulingClass", wintypes.DWORD)]
+
+            class Extended(ctypes.Structure):
+                _fields_ = [("BasicLimitInformation", Basic), ("IoInfo", ctypes.c_uint64 * 6),
+                            ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
+                            ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t)]
+
+            k32.CreateJobObjectW.restype = wintypes.HANDLE
+            handle = k32.CreateJobObjectW(None, None)
+            info = Extended()
+            info.BasicLimitInformation.LimitFlags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            if not handle or not k32.SetInformationJobObject(wintypes.HANDLE(handle), 9, ctypes.byref(info),
+                                                             ctypes.sizeof(info)):
+                return
+            _kill_job_handle = handle
+        k32.AssignProcessToJobObject(wintypes.HANDLE(_kill_job_handle), wintypes.HANDLE(int(proc._handle)))
+    except Exception:  # noqa: BLE001
         pass
-    if info["fps"] is None and shutil.which("ffprobe"):
+
+
+def _wait_process(proc: subprocess.Popen, stop_check: Callable[[], None], timeout: float) -> int:
+    """Wait for `proc`, killing it on stop/timeout. Never blocks longer than ~0.2 s between checks."""
+    deadline = time.time() + timeout
+    try:
+        while proc.poll() is None:
+            stop_check()
+            if time.time() > deadline:
+                raise ExtractStalled(f"timed out after {timeout:.0f} s")
+            time.sleep(0.2)
+    except BaseException:
+        _kill(proc)
+        raise
+    return proc.returncode
+
+
+def _kill(proc: subprocess.Popen) -> None:
+    if proc.poll() is None:
+        proc.kill()
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        pass
+
+
+def _run_in_thread(fn: Callable[[], Any], stop_check: Callable[[], None], timeout: float) -> Any:
+    """Run a call that may hang (OpenCV on a bad file) without blocking the job: give up after `timeout`."""
+    box: dict = {}
+
+    def target() -> None:
         try:
-            out = subprocess.run(
-                ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-                 "stream=width,height,r_frame_rate:format=duration", "-of", "json", str(path)],
-                capture_output=True, text=True, timeout=60,
-            )
-            j = json.loads(out.stdout or "{}")
-            st = (j.get("streams") or [{}])[0]
-            num, _, den = (st.get("r_frame_rate") or "0/1").partition("/")
-            fps = float(num) / float(den or 1) if float(den or 1) else None
-            dur = float((j.get("format") or {}).get("duration") or 0) or None
-            info.update(fps=round(fps, 3) if fps else None, width=st.get("width"),
-                        height=st.get("height"), duration=dur,
-                        frames=int(dur * fps) if (dur and fps) else None)
-        except Exception:
+            box["value"] = fn()
+        except BaseException as e:  # noqa: BLE001
+            box["error"] = e
+
+    th = threading.Thread(target=target, daemon=True, name="probe")
+    th.start()
+    deadline = time.time() + timeout
+    while th.is_alive():
+        th.join(0.2)
+        stop_check()
+        if time.time() > deadline:
+            raise ExtractStalled(f"timed out after {timeout:.0f} s")
+    if "error" in box:
+        raise box["error"]
+    return box.get("value")
+
+
+def _probe_ffprobe(path: Path, stop_check: Callable[[], None]) -> dict:
+    cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+           "stream=width,height,r_frame_rate,avg_frame_rate,nb_frames:format=duration", "-of", "json", str(path)]
+    with tempfile.TemporaryFile() as out:
+        proc = subprocess.Popen(cmd, stdout=out, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, **LOW_PRIORITY)
+        _tie_to_server(proc)
+        _wait_process(proc, stop_check, PROBE_TIMEOUT_S)
+        out.seek(0)
+        j = json.loads(out.read().decode("utf-8", "replace") or "{}")
+    st = (j.get("streams") or [{}])[0]
+    fps = None
+    for key in ("avg_frame_rate", "r_frame_rate"):
+        num, _, den = (st.get(key) or "0/1").partition("/")
+        try:
+            if float(den or 1) and float(num) > 0:
+                fps = float(num) / float(den or 1)
+                break
+        except ValueError:
             pass
+    try:
+        dur = float((j.get("format") or {}).get("duration") or 0) or None
+    except ValueError:
+        dur = None
+    try:
+        n = int(st.get("nb_frames") or 0) or None
+    except ValueError:
+        n = None
+    return {"fps": fps, "width": st.get("width"), "height": st.get("height"), "duration": dur,
+            "frames": n or (int(dur * fps) if (dur and fps) else None)}
+
+
+def _probe_opencv(path: Path) -> dict:
+    import cv2  # type: ignore
+    cap = cv2.VideoCapture(str(path))
+    try:
+        if not cap.isOpened():
+            return {}
+        fps = cap.get(cv2.CAP_PROP_FPS) or 0
+        fps = fps if 0 < fps < 1000 else None
+        n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        n = n if n > 0 else None
+        return {"fps": fps, "width": int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or None,
+                "height": int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or None, "frames": n,
+                "duration": (n / fps) if (n and fps) else None}
+    finally:
+        cap.release()
+
+
+def probe_video(path: Path, stop_check: Callable[[], None] = _no_stop) -> dict:
+    info: dict = {"fps": None, "width": None, "height": None, "frames": None, "duration": None}
+    sources = []
+    if shutil.which("ffprobe"):
+        sources.append(lambda: _probe_ffprobe(path, stop_check))
+    if opencv_available():
+        sources.append(lambda: _run_in_thread(lambda: _probe_opencv(path), stop_check, PROBE_TIMEOUT_S))
+    for source in sources:
+        try:
+            found = source() or {}
+        except (JobCancelled, ExtractSkipped):
+            raise
+        except Exception as e:  # noqa: BLE001
+            print(f"[extract] probe failed for {path.name}: {e}")
+            continue
+        for k, v in found.items():
+            if info.get(k) is None and v:
+                info[k] = v
+        if info["fps"] and info["duration"]:
+            break
+    if info["fps"]:
+        info["fps"] = round(info["fps"], 3)
     return info
 
 
@@ -639,91 +805,198 @@ def clear_frames(d: Path) -> None:
                 pass
 
 
-class JobCancelled(Exception):
-    pass
+ProgressFn = Callable[[float | None, int], None]  # (fraction or None if unknown, frames written)
+
+
+def _time_limit(duration: float | None) -> float:
+    return max(EXTRACT_MIN_LIMIT_S, 30 * duration) if duration else 4 * 3600
+
+
+def _ffmpeg_error_text(err) -> str:
+    err.seek(0)
+    lines = [ln.strip() for ln in err.read().decode("utf-8", "replace").splitlines() if ln.strip()]
+    return " | ".join(lines[-3:])[-400:]
+
+
+def _expected_frames(info: dict, fps: float | None) -> int | None:
+    src_fps, duration = info.get("fps"), info.get("duration")
+    if fps and fps > 0:
+        return int(duration * min(fps, src_fps or fps)) + 1 if duration else None
+    return info.get("frames") or (int(duration * src_fps) + 1 if (duration and src_fps) else None)
 
 
 def _extract_ffmpeg(src: Path, out_dir: Path, fps: float | None, duration: float | None,
-                    progress: Callable[[float], None] | None) -> int:
+                    progress: ProgressFn | None, stop_check: Callable[[], None] = _no_stop,
+                    max_frames: int | None = None, regen_pts: bool = False) -> int:
     cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-i", str(src)]
-    if fps and fps > 0:
-        cmd += ["-vf", f"fps={fps}"]
+    filters = (["setpts=N/FRAME_RATE/TB"] if regen_pts else []) + ([f"fps={fps}"] if fps and fps > 0 else [])
+    if filters:
+        cmd += ["-vf", ",".join(filters)]
     cmd += ["-q:v", "2", "-start_number", "1", str(out_dir / "frame_%06d.jpg"),
             "-progress", "pipe:1", "-nostats"]
+    state = {"t": 0.0, "frame": 0}
+
+    def read_progress(stream) -> None:
+        for line in stream:
+            key, _, val = line.strip().partition("=")
+            try:
+                if key in ("out_time_us", "out_time_ms"):
+                    state["t"] = max(state["t"], int(val) / 1e6)
+                elif key == "frame":
+                    state["frame"] = int(val)
+            except ValueError:
+                pass
+
+    limit = _time_limit(duration)
+    # stderr goes to a file: a full stderr pipe would block ffmpeg on warning-heavy files
     with tempfile.TemporaryFile() as err:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=err, text=True, errors="replace")
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=err, stdin=subprocess.DEVNULL,
+                                text=True, errors="replace", **LOW_PRIORITY)
+        _tie_to_server(proc)
+        reader = threading.Thread(target=read_progress, args=(proc.stdout,), daemon=True, name="ffmpeg-progress")
+        reader.start()
+        started = last_change = time.time()
+        last_key = None
         try:
-            for line in proc.stdout:  # type: ignore[union-attr]
-                if line.startswith("out_time_us=") or line.startswith("out_time_ms="):
-                    try:
-                        t = int(line.split("=", 1)[1]) / 1e6
-                    except ValueError:
-                        continue
-                    if progress and duration:
-                        progress(min(0.99, t / duration))
-            proc.wait()
+            while proc.poll() is None:
+                time.sleep(0.25)
+                stop_check()
+                now = time.time()
+                key = (state["frame"], round(state["t"], 2))
+                if key != last_key:
+                    last_key, last_change = key, now
+                elif now - last_change > EXTRACT_STALL_S:
+                    raise ExtractStalled(f"ffmpeg made no progress for {EXTRACT_STALL_S} s "
+                                         f"(stuck after {state['frame']} frames)")
+                if now - started > limit:
+                    raise ExtractStalled(f"ffmpeg took longer than {limit / 60:.0f} min")
+                if max_frames and state["frame"] > max_frames:
+                    raise ExtractRunaway(f"ffmpeg wrote {state['frame']} frames but the video has at most "
+                                         f"~{max_frames} (broken timestamps)")
+                if progress:
+                    progress(min(0.99, state["t"] / duration) if duration else None, state["frame"])
         except BaseException:
-            proc.kill()
-            proc.wait()
+            _kill(proc)
             raise
+        finally:
+            reader.join(2)
         if proc.returncode != 0:
-            err.seek(0)
-            raise RuntimeError(err.read().decode("utf-8", "replace")[-600:] or "ffmpeg failed")
+            raise RuntimeError(_ffmpeg_error_text(err) or f"ffmpeg exited with code {proc.returncode}")
     return len(list_frames(out_dir))
 
 
-def _extract_opencv(src: Path, out_dir: Path, fps: float | None,
-                    progress: Callable[[float], None] | None) -> int:
+def _extract_opencv(src: Path, out_dir: Path, fps: float | None, duration: float | None,
+                    progress: ProgressFn | None, stop_check: Callable[[], None] = _no_stop) -> int:
     import cv2  # type: ignore
 
-    cap = cv2.VideoCapture(str(src))
-    if not cap.isOpened():
-        raise RuntimeError("OpenCV could not open the video")
-    src_fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-    interval = max(1.0, src_fps / fps) if fps and fps > 0 else 1.0
-    idx = written = 0
-    next_take = 0.0
+    state = {"read": 0, "written": 0, "total": 0}
+    stop = threading.Event()
+    box: dict = {}
+
+    def work() -> None:
+        cap = cv2.VideoCapture(str(src))
+        try:
+            if not cap.isOpened():
+                raise RuntimeError("OpenCV could not open the video")
+            src_fps = cap.get(cv2.CAP_PROP_FPS) or 0
+            src_fps = src_fps if 0 < src_fps < 1000 else 25.0
+            state["total"] = max(0, int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0))
+            interval = max(1.0, src_fps / fps) if fps and fps > 0 else 1.0
+            next_take = 0.0
+            while not stop.is_set():
+                ok, frame = cap.read()
+                if not ok or stop.is_set():
+                    break
+                if state["read"] >= next_take:
+                    ok_enc, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
+                    if ok_enc:
+                        state["written"] += 1
+                        (out_dir / f"frame_{state['written']:06d}.jpg").write_bytes(buf.tobytes())
+                    next_take += interval
+                state["read"] += 1
+        except BaseException as e:  # noqa: BLE001
+            box["error"] = e
+        finally:
+            cap.release()
+
+    # cap.read() can block forever on a broken file; the worker thread is abandoned in that case
+    th = threading.Thread(target=work, daemon=True, name="opencv-extract")
+    th.start()
+    limit = _time_limit(duration)
+    started = last_change = time.time()
+    last_read = -1
     try:
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-            if idx >= next_take:
-                written += 1
-                ok_enc, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
-                if ok_enc:
-                    (out_dir / f"frame_{written:06d}.jpg").write_bytes(buf.tobytes())
-                next_take += interval
-            idx += 1
-            if progress and total and idx % 10 == 0:
-                progress(min(0.99, idx / total))
-    finally:
-        cap.release()
-    return written
+        while th.is_alive():
+            th.join(0.25)
+            stop_check()
+            now = time.time()
+            if state["read"] != last_read:
+                last_read, last_change = state["read"], now
+            elif now - last_change > EXTRACT_STALL_S:
+                raise ExtractStalled(f"OpenCV made no progress for {EXTRACT_STALL_S} s "
+                                     f"(stuck after {state['written']} frames)")
+            if now - started > limit:
+                raise ExtractStalled(f"OpenCV took longer than {limit / 60:.0f} min")
+            if progress:
+                total = state["total"]
+                progress(min(0.99, state["read"] / total) if total else None, state["written"])
+    except BaseException:
+        stop.set()
+        th.join(2)
+        raise
+    if "error" in box:
+        raise box["error"]
+    return state["written"]
 
 
 def extract_frames(src: Path, out_dir: Path, fps: float | None = None,
-                   progress: Callable[[float], None] | None = None) -> dict:
+                   progress: ProgressFn | None = None,
+                   stop_check: Callable[[], None] = _no_stop) -> dict:
+    """Probe + extract with a watchdog: ffmpeg first, OpenCV once as fallback. `stop_check` raises
+    JobCancelled / ExtractSkipped to stop; partial frames are removed then."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    info = probe_video(src)
-    clear_frames(out_dir)
-    n, engine, last_err = 0, None, None
-    if ffmpeg_available():
-        try:
-            n = _extract_ffmpeg(src, out_dir, fps, info["duration"], progress)
-            engine = "ffmpeg"
-        except JobCancelled:
-            raise
-        except Exception as e:  # noqa: BLE001
-            last_err = e
-            print(f"[extract] ffmpeg failed, trying OpenCV: {e}")
-            clear_frames(out_dir)
-    if n == 0 and opencv_available():
-        n = _extract_opencv(src, out_dir, fps, progress)
-        engine = "opencv"
-    if n == 0:
-        raise RuntimeError(f"No frames extracted ({last_err or 'install ffmpeg or opencv-python'})")
+    try:
+        info = probe_video(src, stop_check)
+        clear_frames(out_dir)
+        n, engine, errors = 0, None, []
+        expected = _expected_frames(info, fps)
+        max_frames = int(expected * 1.5) + 100 if expected else None
+        # second ffmpeg pass only after a runaway: rebuild timestamps from the frame count
+        for regen_pts in ((False, True) if ffmpeg_available() else ()):
+            try:
+                n = _extract_ffmpeg(src, out_dir, fps, info["duration"], progress, stop_check,
+                                    max_frames=max_frames, regen_pts=regen_pts)
+                engine = "ffmpeg"
+                break
+            except (JobCancelled, ExtractSkipped):
+                raise
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"ffmpeg: {e}")
+                clear_frames(out_dir)
+                if isinstance(e, ExtractRunaway) and not regen_pts:
+                    print(f"[extract] {src.name}: {e}; retrying with rebuilt timestamps")
+                    continue
+                print(f"[extract] {src.name}: ffmpeg failed ({e}); trying OpenCV")
+                break
+        if n == 0 and opencv_available():
+            try:
+                n = _extract_opencv(src, out_dir, fps, info["duration"], progress, stop_check)
+                engine = "opencv"
+            except (JobCancelled, ExtractSkipped):
+                raise
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"OpenCV: {e}")
+                print(f"[extract] {src.name}: OpenCV failed ({e})")
+                clear_frames(out_dir)
+        if n == 0:
+            if errors:
+                raise RuntimeError("No frames extracted — " + "; ".join(errors))
+            if not (ffmpeg_available() or opencv_available()):
+                raise RuntimeError("No frames extracted — install ffmpeg or opencv-python")
+            raise RuntimeError("No frames extracted — the file has no readable video frames")
+    except (JobCancelled, ExtractSkipped):
+        clear_frames(out_dir)
+        raise
     return {
         "num_frames": n,
         "fps": float(fps) if fps and fps > 0 else info["fps"],
@@ -744,9 +1017,14 @@ _job_queues: dict[str, queue.Queue] = {"import": queue.Queue(), "ml": queue.Queu
 _workers_started = False
 
 
-def submit_job(kind: str, lane: str, title: str, fn: Callable[[dict], Any], video_id: str | None = None) -> dict:
+def new_job_id() -> str:
+    return uuid.uuid4().hex[:12]
+
+
+def submit_job(kind: str, lane: str, title: str, fn: Callable[[dict], Any], video_id: str | None = None,
+               job_id: str | None = None) -> dict:
     job = {
-        "id": uuid.uuid4().hex[:12],
+        "id": job_id or new_job_id(),
         "kind": kind,
         "lane": lane,
         "title": title,
@@ -775,8 +1053,20 @@ def check_cancel(job: dict | None) -> None:
         raise JobCancelled()
 
 
+def job_active(job_id: str | None) -> bool:
+    job = _jobs.get(job_id) if job_id else None
+    return bool(job and job["status"] in ("queued", "running"))
+
+
+def cancel_job(job: dict) -> None:
+    """Running jobs stop at their next check; queued ones are dropped right away."""
+    job["cancel"] = True
+    if job["status"] == "queued":
+        job.update(status="cancelled", message="Cancelled before it started", finished=time.time())
+
+
 def _prune_jobs() -> None:
-    done = sorted((j for j in _jobs.values() if j["finished"]), key=lambda j: j["finished"])
+    done = sorted((j for j in list(_jobs.values()) if j["finished"]), key=lambda j: j["finished"])
     for j in done[:-30]:
         _jobs.pop(j["id"], None)
 
@@ -786,7 +1076,8 @@ def _job_worker(lane: str) -> None:
     while True:
         job, fn = q.get()
         if job["cancel"]:
-            job.update(status="cancelled", message="Cancelled", finished=time.time())
+            if not job["finished"]:
+                job.update(status="cancelled", message="Cancelled", finished=time.time())
             continue
         job.update(status="running", message="Starting…")
         try:
@@ -795,7 +1086,9 @@ def _job_worker(lane: str) -> None:
             if job["message"] in ("Starting…", ""):
                 job["message"] = "Done"
         except JobCancelled:
-            job.update(status="cancelled", message="Cancelled")
+            job.update(status="cancelled", message="Stopped")
+        except ExtractSkipped:
+            job.update(status="cancelled", message="Skipped")
         except Exception as e:  # noqa: BLE001
             traceback.print_exc()
             job.update(status="error", error=str(e), message=str(e))
@@ -866,9 +1159,66 @@ def prefill_annotations(vid: str, rel_path: str, label_from_folder: bool) -> Non
             persist(vid, data)
 
 
-def import_folder(job: dict | None, root: Path, fps: float | None, label_from_folder: bool,
-                  auto_vip: bool, reextract: bool, vip_model: str = vip.DEFAULT_WEIGHTS,
-                  log: Callable[[str], None] | None = None) -> dict:
+NOT_EXTRACTED = "not_extracted"
+EXTRACT_STATES = ("queued", "extracting")
+_skip_requests: set[str] = set()
+_extract_live: dict[str, dict] = {}  # vid -> {"fraction": float | None, "frames": int} while extracting
+
+
+def extract_video(job: dict | None, vid: str, src: Path, fps: float | None,
+                  on_progress: ProgressFn | None = None) -> dict:
+    """Extract one library video that was queued for `job`, keeping meta.status in sync.
+    Raises ExtractSkipped (skipped by the user / no longer queued for this job), JobCancelled or
+    RuntimeError (status 'error')."""
+    owner = job["id"] if job else None
+    d = DATA_DIR / vid
+    with vlock(vid):
+        meta = read_meta(vid)
+        if meta.get("status") != "queued" or meta.get("extract_job") != owner:
+            raise ExtractSkipped()
+        meta.update(status="extracting", error=None)
+        write_meta(vid, meta)
+    _skip_requests.discard(vid)
+    _extract_live[vid] = {"fraction": None, "frames": 0}
+
+    def progress(f: float | None, n: int) -> None:
+        _extract_live[vid] = {"fraction": f, "frames": n}
+        if on_progress:
+            on_progress(f, n)
+
+    def stop_check() -> None:
+        check_cancel(job)
+        if vid in _skip_requests:
+            raise ExtractSkipped()
+
+    try:
+        if not src.is_file():
+            raise RuntimeError(f"Source video not found: {src}")
+        # Auto-VIP / Detect + track read the frames that are about to be replaced
+        stop_tracking_jobs(vid, stop_check)
+        with vlock(vid):
+            backup_annotations(d)
+        info = extract_frames(src, d, fps, progress, stop_check)
+    except ExtractSkipped:
+        update_meta(vid, status=NOT_EXTRACTED, error="Skipped", extract_job=None)
+        raise
+    except JobCancelled:
+        update_meta(vid, status=NOT_EXTRACTED, error="Stopped before extraction finished", extract_job=None)
+        raise
+    except Exception as e:  # noqa: BLE001
+        update_meta(vid, status="error", error=str(e)[:300], extract_job=None)
+        raise
+    finally:
+        _extract_live.pop(vid, None)
+        _skip_requests.discard(vid)
+    update_meta(vid, status="ready", error=None, extract_job=None, frames_version=int(time.time()), **info)
+    return info
+
+
+def plan_import(root: Path, fps: float | None, label_from_folder: bool, reextract: bool,
+                owner: str | None) -> list[tuple[str, Path, Path]]:
+    """Register every video under root (sidebar shows them right away); videos that need frames
+    are queued for the job `owner`."""
     videos = scan_videos(root)
     if not videos:
         raise ValueError(f"No video files found in {root}")
@@ -888,15 +1238,49 @@ def import_folder(job: dict | None, root: Path, fps: float | None, label_from_fo
             meta = read_meta(vid)
             meta.update(
                 video_id=vid, source_path=src, source_name=p.name, rel_path=str(rel),
-                group=group, order=order, root=str(root),
+                group=group, order=order, root=str(root), label_from_folder=label_from_folder,
             )
-            if not has_frames or reextract:
-                meta.update(status="queued", error=None)
+            busy = meta.get("status") in EXTRACT_STATES and job_active(meta.get("extract_job"))
+            if not busy and (not has_frames or reextract):
+                meta.update(status="queued", error=None, extract_job=owner, extract_fps=fps)
             write_meta(vid, meta)
         plan.append((vid, p, rel))
+    return plan
 
+
+TRACKING_KINDS = ("auto_vip", "detect_track", "track")
+
+
+def tracking_job_active(vid: str) -> bool:
+    return any(j["video_id"] == vid and j["kind"] in TRACKING_KINDS
+               and j["status"] in ("queued", "running") for j in list(_jobs.values()))
+
+
+def stop_tracking_jobs(vid: str, stop_check: Callable[[], None] = _no_stop, wait_s: float = 120) -> None:
+    """Cancel this video's Auto-VIP / Detect + track / Track jobs and wait until a running one has stopped."""
+    jobs = [j for j in list(_jobs.values()) if j["video_id"] == vid and j["kind"] in TRACKING_KINDS
+            and j["status"] in ("queued", "running")]
+    for j in jobs:
+        cancel_job(j)
+    deadline = time.time() + wait_s
+    while any(j["status"] == "running" for j in jobs):
+        stop_check()
+        if time.time() > deadline:
+            raise RuntimeError("A Detect + track job on this video did not stop; try again in a moment")
+        time.sleep(0.2)
+
+
+def import_folder(job: dict | None, root: Path, fps: float | None, label_from_folder: bool,
+                  auto_vip: bool, reextract: bool, vip_model: str = vip.DEFAULT_WEIGHTS,
+                  log: Callable[[str], None] | None = None,
+                  plan: list[tuple[str, Path, Path]] | None = None) -> dict:
+    """Extract the queued videos one after another. A failing, stalled or skipped video never
+    blocks the rest; stopping the job leaves finished videos ready and the others 'not extracted'."""
+    owner = job["id"] if job else None
+    if plan is None:
+        plan = plan_import(root, fps, label_from_folder, reextract, owner)
     total = len(plan)
-    imported, skipped, failed = [], [], []
+    imported, skipped, not_extracted, failed = [], [], [], []
     try:
         for i, (vid, p, rel) in enumerate(plan):
             check_cancel(job)
@@ -905,48 +1289,145 @@ def import_folder(job: dict | None, root: Path, fps: float | None, label_from_fo
                 job["progress"] = i / total
             if log:
                 log(f"[{i + 1}/{total}] {rel}")
-            d = DATA_DIR / vid
-            if list_frames(d) and not reextract:
-                skipped.append(vid)
-            else:
-                update_meta(vid, status="extracting", error=None)
+            meta = read_meta(vid)
+            if meta.get("status") in EXTRACT_STATES and meta.get("extract_job") == owner:
 
-                def on_progress(f: float, i=i) -> None:
-                    check_cancel(job)
+                def on_progress(f: float | None, n: int, i=i, name=p.name) -> None:
                     if job:
-                        job["progress"] = (i + f) / total
+                        job["progress"] = (i + (f or 0.0)) / total
+                        pct = f" ({f:.0%})" if f is not None else ""
+                        job["message"] = f"{i + 1}/{total} · {name} · {n} frames{pct}"
 
                 try:
-                    with vlock(vid):
-                        backup_annotations(d)
-                    info = extract_frames(p, d, fps, on_progress)
+                    extract_video(job, vid, p, fps, on_progress)
+                except ExtractSkipped:
+                    not_extracted.append(vid)
+                    if log:
+                        log("    skipped")
+                    continue
                 except JobCancelled:
-                    update_meta(vid, status="cancelled")
                     raise
                 except Exception as e:  # noqa: BLE001
-                    update_meta(vid, status="error", error=str(e)[:300])
                     failed.append({"video_id": vid, "error": str(e)[:300]})
                     if log:
                         log(f"    ERROR: {e}")
                     continue
-                update_meta(vid, frames_version=int(time.time()), **info)
                 imported.append(vid)
+            elif list_frames(DATA_DIR / vid) and meta.get("status") not in EXTRACT_STATES:
+                skipped.append(vid)
+                if meta.get("status") != "ready":
+                    update_meta(vid, status="ready", error=None)
+            else:
+                not_extracted.append(vid)  # skipped by the user, or another job extracts it
+                continue
             prefill_annotations(vid, str(rel), label_from_folder)
-            update_meta(vid, status="ready")
             if auto_vip:
                 if job is None:
                     run_auto_vip(None, vid, vip_model, 640, log=log)
-                else:
+                elif not tracking_job_active(vid):
                     submit_job("auto_vip", "ml", f"Auto-VIP · {p.name}",
                                lambda j, vid=vid: run_auto_vip(j, vid, vip_model, 640), video_id=vid)
     except JobCancelled:
         for vid, _, _ in plan:
-            if read_meta(vid).get("status") == "queued":
-                update_meta(vid, status="cancelled")
+            with vlock(vid):
+                meta = read_meta(vid)
+                if meta.get("status") == "queued" and meta.get("extract_job") == owner:
+                    if list_frames(DATA_DIR / vid):
+                        meta.update(status="ready", extract_job=None)
+                    else:
+                        meta.update(status=NOT_EXTRACTED, error="Import stopped", extract_job=None)
+                    write_meta(vid, meta)
         raise
     if job:
-        job["message"] = f"{total} video(s): {len(imported)} extracted, {len(skipped)} already present, {len(failed)} failed"
-    return {"total": total, "imported": imported, "skipped": skipped, "failed": failed}
+        job["message"] = (f"{total} video(s): {len(imported)} extracted, {len(skipped)} already present, "
+                          f"{len(not_extracted)} skipped, {len(failed)} failed")
+    return {"total": total, "imported": imported, "skipped": skipped, "not_extracted": not_extracted,
+            "failed": failed}
+
+
+def extraction_orphaned(vid: str, meta: dict) -> bool:
+    """queued / extracting, but no job of this server will ever extract it (crash, restart, stopped job)."""
+    return (meta.get("status") in EXTRACT_STATES and vid not in _extract_live
+            and not job_active(meta.get("extract_job")))
+
+
+def recover_interrupted(reason: str = "Interrupted — the app was closed before extraction finished") -> int:
+    """Turn orphaned 'waiting / extracting' states into 'not extracted' (Retry is offered)."""
+    n = 0
+    for d in library_dirs():
+        vid = d.name
+        with vlock(vid):
+            meta = read_meta(vid)
+            if not extraction_orphaned(vid, meta):
+                continue
+            if meta["status"] == "queued" and list_frames(d):
+                meta.update(status="ready", extract_job=None)
+            else:
+                clear_frames(d)
+                meta.update(status=NOT_EXTRACTED, extract_job=None, error=reason)
+            write_meta(vid, meta)
+            n += 1
+    return n
+
+
+def has_user_annotations(vid: str) -> bool:
+    raw = read_json(annotation_path(DATA_DIR / vid), {})
+    if raw.get("video_label") or raw.get("video_comment") or raw.get("context"):
+        return True
+    return any(s.get("behaviours") or s.get("behaviour") or s.get("bbox") or s.get("objects") or s.get("comment")
+               for s in (raw.get("frames") or {}).values() if isinstance(s, dict))
+
+
+def trash_dir() -> Path:
+    return DATA_DIR / "_trash"
+
+
+def stop_video_work(vid: str, wait_s: float = 20) -> None:
+    """Cancel every job of this video and make sure no extraction is writing into its folder."""
+    for j in list(_jobs.values()):
+        if j["video_id"] == vid and j["status"] in ("queued", "running"):
+            cancel_job(j)
+    with vlock(vid):
+        meta = read_meta(vid)
+        if meta.get("status") == "queued":
+            meta.update(status=NOT_EXTRACTED, error="Skipped", extract_job=None)
+            write_meta(vid, meta)
+    if vid in _extract_live:
+        _skip_requests.add(vid)
+    stop_tracking_jobs(vid, wait_s=wait_s)
+    deadline = time.time() + wait_s
+    while vid in _extract_live:
+        if time.time() > deadline:
+            raise HTTPException(409, "Extraction of this video did not stop yet; try again in a moment")
+        time.sleep(0.1)
+
+
+def delete_video(vid: str, mode: str) -> dict:
+    """mode 'frames': remove frames, keep annotations (Retry re-extracts). mode 'all': remove the folder.
+    Annotation / meta files are copied to data/_trash/<id>_<time>/ first."""
+    d = video_dir(vid)
+    stop_video_work(vid)
+    keep = [p for p in d.iterdir() if p.is_file() and p.suffix.lower() == ".json"]
+    backup = None
+    if keep:
+        backup = trash_dir() / f"{vid}_{time.strftime('%Y%m%d_%H%M%S')}"
+        backup.mkdir(parents=True, exist_ok=True)
+        for p in keep:
+            shutil.copy2(p, backup / p.name)
+    with vlock(vid):
+        if mode == "frames":
+            clear_frames(d)
+            (d / UNDO_FILE).unlink(missing_ok=True)
+            meta = read_meta(vid)
+            meta.update(status=NOT_EXTRACTED, error="Frames deleted", extract_job=None)
+            write_meta(vid, meta)
+        else:
+            shutil.rmtree(d, ignore_errors=True)
+            if d.exists():
+                time.sleep(0.5)  # Windows: a frame may still be open in another request
+                shutil.rmtree(d)
+    _stats_cache.pop(vid, None)
+    return {"ok": True, "video_id": vid, "mode": mode, "backup": str(backup) if backup else None}
 
 
 def backup_annotations(d: Path) -> str | None:
@@ -1471,6 +1952,9 @@ def export_all() -> dict:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    n = recover_interrupted()
+    if n:
+        print(f"Marked {n} video(s) as not extracted (extraction was interrupted); use Retry in the sidebar")
     start_background()
     yield
     flush_coco()
@@ -1715,9 +2199,7 @@ def api_detect(vid: str, name: str, req: DetectRequest):
 
 
 def ensure_no_tracking_job(vid: str) -> None:
-    active = [j for j in _jobs.values() if j["video_id"] == vid and j["kind"] in ("auto_vip", "detect_track", "track")
-              and j["status"] in ("queued", "running")]
-    if active:
+    if tracking_job_active(vid):
         raise HTTPException(409, "A tracking job is already running for this video")
 
 
@@ -1796,7 +2278,7 @@ def api_undo(vid: str):
 
 @app.get("/api/jobs")
 def api_jobs():
-    jobs = sorted(_jobs.values(), key=lambda j: j["created"], reverse=True)
+    jobs = sorted(list(_jobs.values()), key=lambda j: j["created"], reverse=True)
     return {"jobs": [public_job(j) for j in jobs]}
 
 
@@ -1813,8 +2295,122 @@ def api_job_cancel(job_id: str):
     job = _jobs.get(job_id)
     if not job:
         raise HTTPException(404, "Unknown job")
-    job["cancel"] = True
+    cancel_job(job)
     return public_job(job)
+
+
+class CancelAllRequest(BaseModel):
+    lane: str | None = None  # "import" | "ml" | None = every lane
+
+
+@app.post("/api/jobs/cancel-all")
+def api_jobs_cancel_all(req: CancelAllRequest | None = None):
+    lane = req.lane if req else None
+    hit = [j for j in list(_jobs.values()) if j["status"] in ("queued", "running") and (lane is None or j["lane"] == lane)]
+    for j in hit:
+        cancel_job(j)
+    return {"cancelled": len(hit)}
+
+
+class ExtractRequest(BaseModel):
+    fps: float | None = None
+
+
+@app.post("/api/videos/{vid}/skip")
+def api_video_skip(vid: str):
+    """Stop extracting this one video (or drop it from the queue); the import goes on with the next."""
+    video_dir(vid)
+    with vlock(vid):
+        meta = read_meta(vid)
+        status, owner = meta.get("status"), meta.get("extract_job")
+        if status == "extracting" and vid in _extract_live and job_active(owner):
+            _skip_requests.add(vid)
+            return {"ok": True, "status": "stopping"}
+        if status not in EXTRACT_STATES:
+            raise HTTPException(409, "This video is not waiting for or being extracted")
+        meta.update(status=NOT_EXTRACTED, error="Skipped", extract_job=None)
+        write_meta(vid, meta)
+    job = _jobs.get(owner) if owner else None
+    if job and job["kind"] in ("extract", "import") and job["video_id"] == vid:
+        cancel_job(job)
+    return {"ok": True, "status": NOT_EXTRACTED}
+
+
+@app.post("/api/videos/{vid}/extract")
+def api_video_extract(vid: str, req: ExtractRequest | None = None):
+    """(Re-)extract one video from its source file as a background job (Retry / Extract now)."""
+    video_dir(vid)
+    if not (ffmpeg_available() or opencv_available()):
+        raise HTTPException(503, "Cannot extract frames: install ffmpeg or opencv-python")
+    job_id = new_job_id()
+    with vlock(vid):
+        meta = read_meta(vid)
+        if meta.get("status") in EXTRACT_STATES and job_active(meta.get("extract_job")):
+            raise HTTPException(409, "This video is already queued for extraction")
+        src_text = meta.get("source_path")
+        src = Path(src_text) if src_text else None
+        if not src or not src.is_file():
+            raise HTTPException(404, f"Source video not found: {src_text or '(unknown)'} — open its folder again "
+                                     "or upload the file again")
+        fps = req.fps if req and req.fps and req.fps > 0 else meta.get("extract_fps")
+        meta.update(status="queued", error=None, extract_job=job_id, extract_fps=fps)
+        write_meta(vid, meta)
+    name = meta.get("source_name") or vid
+    rel_path = meta.get("rel_path")
+    label_from_folder = bool(meta.get("label_from_folder"))
+
+    def work(job: dict) -> dict:
+        def on_progress(f: float | None, n: int) -> None:
+            job["progress"] = f or 0.0
+            job["message"] = f"{n} frames extracted" + (f" ({f:.0%})" if f is not None else "")
+
+        info = extract_video(job, vid, src, fps, on_progress)
+        if rel_path:
+            prefill_annotations(vid, rel_path, label_from_folder)
+        with vlock(vid):
+            persist(vid, load_annotations(vid), coco_now=True)
+        job["message"] = f"Extracted {info['num_frames']} frames"
+        return {"video_id": vid, **info}
+
+    job = submit_job("extract", "import", f"Extract · {name}", work, video_id=vid, job_id=job_id)
+    return {"job": job}
+
+
+class DeleteRequest(BaseModel):
+    mode: str = "all"  # "frames" (keep annotations) | "all" (video and annotations)
+
+
+@app.post("/api/videos/{vid}/delete")
+def api_video_delete(vid: str, req: DeleteRequest):
+    if req.mode not in ("frames", "all"):
+        raise HTTPException(400, "mode must be 'frames' or 'all'")
+    return delete_video(vid, req.mode)
+
+
+@app.post("/api/videos/cleanup")
+def api_videos_cleanup():
+    """Remove every 'not extracted' / 'error' / empty entry that has no frames (annotations go to _trash)."""
+    recover_interrupted("No import was running for it")
+    removed, kept, backups = [], [], []
+    for d in library_dirs():
+        s = video_summary(d.name)
+        if s["status"] not in (NOT_EXTRACTED, "error", "empty") or s["num_frames"]:
+            continue
+        if has_user_annotations(d.name):
+            kept.append(d.name)
+            continue
+        res = delete_video(d.name, "all")
+        removed.append(d.name)
+        if res["backup"]:
+            backups.append(res["backup"])
+    return {"removed": removed, "kept_with_annotations": kept, "backups": backups}
+
+
+@app.post("/api/library/refresh")
+def api_library_refresh():
+    """Re-sync stored states with the running jobs: orphaned 'waiting / extracting' → 'not extracted'."""
+    fixed = recover_interrupted("No import was running for it")
+    return {"fixed": fixed, "videos": api_videos()["videos"]}
 
 
 # ---- Import -----------------------------------------------------------------
@@ -1850,22 +2446,13 @@ def api_import_folder(req: FolderRequest):
     if not (ffmpeg_available() or opencv_available()):
         raise HTTPException(503, "Cannot extract frames: install ffmpeg or opencv-python")
     fps = req.fps if req.fps and req.fps > 0 else None
-    # Show every video in the sidebar right away, before extraction starts
-    known = source_index()
-    for order, p in enumerate(videos):
-        if os.path.normcase(str(p.resolve())) in known:
-            continue
-        rel = p.relative_to(root)
-        vid = unique_video_id(make_video_id(rel))
-        write_meta(vid, {
-            "video_id": vid, "source_path": str(p.resolve()), "source_name": p.name,
-            "rel_path": str(rel), "group": "/".join([root.name, *rel.parent.parts]),
-            "order": order, "root": str(root), "status": "queued",
-        })
-        known[os.path.normcase(str(p.resolve()))] = vid
+    # Planned before the job starts so every video shows in the sidebar right away and can be skipped
+    job_id = new_job_id()
+    plan = plan_import(root, fps, req.label_from_folder, req.reextract, job_id)
     job = submit_job(
         "import", "import", f"Import folder · {root.name}",
-        lambda j: import_folder(j, root, fps, req.label_from_folder, req.auto_vip, req.reextract),
+        lambda j: import_folder(j, root, fps, req.label_from_folder, req.auto_vip, req.reextract, plan=plan),
+        job_id=job_id,
     )
     return {"job": job, "count": len(videos)}
 
@@ -1944,31 +2531,28 @@ async def api_import_video(
     uploads.mkdir(exist_ok=True)
     src = uploads / f"source{ext}"
     with src.open("wb") as f:
-        shutil.copyfileobj(file.file, f, 1024 * 1024)
-    write_meta(base, {**read_meta(base), "video_id": base, "source_name": raw_name,
-                      "source_path": str(src), "group": "Uploads", "order": int(time.time()),
-                      "status": "queued", "error": None})
+        await run_in_threadpool(shutil.copyfileobj, file.file, f, 1024 * 1024)
     fps_val = fps if fps and fps > 0 else None
+    job_id = new_job_id()
+    old = read_meta(base)
+    write_meta(base, {**old, "video_id": base, "source_name": old.get("source_name") or raw_name,
+                      "source_path": str(src), "group": old.get("group") or "Uploads",
+                      "order": old.get("order", int(time.time())),
+                      "status": "queued", "error": None, "extract_job": job_id, "extract_fps": fps_val})
 
     def work(job: dict) -> dict:
-        update_meta(base, status="extracting")
-        try:
-            info = extract_frames(src, out_dir, fps_val,
-                                  lambda f: (check_cancel(job), job.__setitem__("progress", f)))
-        except JobCancelled:
-            update_meta(base, status="cancelled")
-            raise
-        except Exception as e:
-            update_meta(base, status="error", error=str(e)[:300])
-            raise
-        update_meta(base, status="ready", frames_version=int(time.time()), **info)
+        def on_progress(f: float | None, n: int) -> None:
+            job["progress"] = f or 0.0
+            job["message"] = f"{n} frames extracted" + (f" ({f:.0%})" if f is not None else "")
+
+        info = extract_video(job, base, src, fps_val, on_progress)
         with vlock(base):
             data = load_annotations(base)
             persist(base, data, coco_now=True)
         job["message"] = f"Extracted {info['num_frames']} frames"
         return {"video_id": base, **info}
 
-    job = submit_job("import", "import", f"Extract · {raw_name}", work, video_id=base)
+    job = submit_job("import", "import", f"Extract · {raw_name}", work, video_id=base, job_id=job_id)
     return {"ok": True, "mode": mode, "video_id": base, "backup": backup, "job": job}
 
 

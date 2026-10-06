@@ -41,6 +41,7 @@ const state = {
   pollTimer: null,
   lastVideoRefresh: 0,
   pendingImport: null,
+  pendingDelete: null,
   trackOpts: JSON.parse(localStorage.getItem("trackOpts") || "null"),
 };
 
@@ -352,6 +353,13 @@ function bindUi() {
   $("file-frames").onchange = onFramesPicked;
   $("file-json").onchange = onJsonPicked;
 
+  $("btn-lib-refresh").onclick = refreshLibrary;
+  $("btn-lib-cleanup").onclick = cleanupLibrary;
+  $("delete-form").onsubmit = onDeleteSubmit;
+  document.addEventListener("mousedown", (e) => { if (!e.target.closest("#vid-menu")) closeVideoMenu(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeVideoMenu(); });
+  $("lib-list").addEventListener("scroll", closeVideoMenu);
+
   $("btn-collapse").onclick = () => setSidebar(false);
   $("btn-expand").onclick = () => setSidebar(true);
 
@@ -502,19 +510,21 @@ function renderLibrary() {
         <span class="gcount">${done}/${items.length}</span></button>
       <div class="group-items">`);
     items.forEach((v) => {
-      const pct = v.num_frames ? Math.round((100 * v.labelled) / v.num_frames) : 0;
-      const statusText = {
-        queued: "waiting to extract…", extracting: "extracting frames…", error: `error: ${v.error || ""}`,
-        cancelled: "not extracted (cancelled)", empty: "no frames",
-      }[v.status] || `${v.num_frames} frames · ${pct}% labelled · ${v.boxed} boxed`;
+      const { text, bar, actions } = videoRowInfo(v);
       const lab = v.video_label === "trauma" ? `<span class="vi-label trauma">Trauma</span>`
         : v.video_label === "no_trauma" ? `<span class="vi-label no-trauma">No trauma</span>` : "";
-      html.push(`<button type="button" class="vid-item ${v.status}${v.id === state.vid ? " active" : ""}" data-vid="${escapeHtml(v.id)}" title="${escapeHtml(v.name)}">
+      const needsAction = v.status !== "ready";
+      html.push(`<div class="vid-row${needsAction ? " needs-action" : ""}" data-vid="${escapeHtml(v.id)}">
+        <button type="button" class="vid-item ${v.status}${v.id === state.vid ? " active" : ""}" data-vid="${escapeHtml(v.id)}" title="${escapeHtml(v.name)}">
         <span class="vi-status"></span>
         <span class="vi-main"><span class="vi-name">${escapeHtml(v.name)}</span>
-          <span class="vi-meta">${escapeHtml(statusText)}</span>
-          ${v.num_frames ? `<span class="vi-bar"><i style="width:${pct}%"></i></span>` : ""}</span>
-        ${lab}</button>`);
+          <span class="vi-meta" title="${escapeHtml(text)}">${escapeHtml(text)}</span>
+          ${bar}</span>
+        ${lab}</button>
+        <span class="vi-actions">${actions.map(([act, label, tip]) =>
+          `<button type="button" class="vi-act ${act}" data-act="${act}" title="${escapeHtml(tip)}">${label}</button>`).join("")}
+          <button type="button" class="vi-act more" data-act="menu" title="More actions (or right-click the video)">⋯</button></span>
+      </div>`);
     });
     html.push(`</div></div>`);
   }
@@ -531,14 +541,225 @@ function renderLibrary() {
   list.querySelectorAll(".vid-item").forEach((b) => {
     b.onclick = () => openVideo(b.dataset.vid);
   });
+  list.querySelectorAll(".vid-row").forEach((row) => {
+    row.oncontextmenu = (e) => { e.preventDefault(); openVideoMenu(row.dataset.vid, e.clientX, e.clientY); };
+    row.querySelectorAll(".vi-act").forEach((b) => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        if (b.dataset.act === "menu") {
+          const r = b.getBoundingClientRect();
+          openVideoMenu(row.dataset.vid, r.left, r.bottom + 2);
+        } else {
+          videoAction(row.dataset.vid, b.dataset.act);
+        }
+      };
+    });
+  });
   const total = state.videos.length;
   const labelled = state.videos.filter((v) => v.video_label).length;
-  const ready = state.videos.filter((v) => v.num_frames).length;
+  const ready = state.videos.filter((v) => v.num_frames && v.status === "ready").length;
+  const removable = state.videos.filter(isRemovablePlaceholder).length;
+  $("btn-lib-cleanup").classList.toggle("hidden", !removable);
+  $("btn-lib-cleanup").textContent = `Remove not extracted (${removable})`;
   $("lib-summary").textContent = total ? `${total} videos · ${ready} ready · ${labelled} labelled Trauma / No trauma` : "";
 }
 
+const TRACKING_KINDS = ["auto_vip", "detect_track", "track"];
+
+function activeJobsFor(vid) {
+  return state.jobs.filter((j) => j.video_id === vid && ["queued", "running"].includes(j.status));
+}
+
+function isRemovablePlaceholder(v) {
+  return ["not_extracted", "error", "empty"].includes(v.status) && !v.num_frames;
+}
+
+// Status line, progress bar and the main action buttons of a sidebar row
+function videoRowInfo(v) {
+  const actions = [];
+  let text;
+  let bar = "";
+  if (v.status === "extracting") {
+    const x = v.extract || {};
+    const n = Math.max(x.frames || 0, v.num_frames || 0);
+    const pct = x.fraction != null ? Math.round(x.fraction * 100) : null;
+    text = `extracting… ${n} frames extracted${pct != null ? ` · ${pct}%` : ""}`;
+    bar = `<span class="vi-bar extract${pct == null ? " indeterminate" : ""}"><i style="width:${pct ?? 35}%"></i></span>`;
+    actions.push(["skip", "Skip", "Stop extracting this video and go on with the next one"]);
+  } else if (v.status === "queued") {
+    text = "waiting to extract…";
+    actions.push(["skip", "Skip", "Don't extract this video in this import"]);
+  } else if (["not_extracted", "error", "empty"].includes(v.status)) {
+    text = v.status === "error" ? `error: ${v.error || "extraction failed"}`
+      : v.status === "empty" ? "no frames" : `not extracted${v.error ? ` — ${v.error}` : ""}`;
+    if (v.can_extract === false) actions.push(["upload", "Upload file…", "The source video was not found — choose the file to extract it again"]);
+    else actions.push(["extract", "Retry", "Extract this video's frames again (same FPS as the import)"]);
+  } else {
+    const pct = v.num_frames ? Math.round((100 * v.labelled) / v.num_frames) : 0;
+    text = `${v.num_frames} frames · ${pct}% labelled · ${v.boxed} boxed`;
+    bar = v.num_frames ? `<span class="vi-bar"><i style="width:${pct}%"></i></span>` : "";
+    const ml = activeJobsFor(v.id).find((j) => TRACKING_KINDS.includes(j.kind));
+    if (ml) {
+      const what = ml.kind === "track" ? "Tracking" : ml.kind === "auto_vip" ? "Auto-VIP" : "Detect + track";
+      text = `${what} ${ml.status === "queued" ? "waiting in queue" : `running · ${Math.round((ml.progress || 0) * 100)}%`}`;
+      actions.push(["cancel-ml", "Cancel", `Cancel ${what} for this video`]);
+    } else {
+      actions.push(["detect", "Detect + track", "Detect + track people in every frame of this video (background job)"]);
+    }
+  }
+  return { text, bar, actions };
+}
+
+function videoMenuItems(v) {
+  const items = [];
+  const ml = activeJobsFor(v.id).find((j) => TRACKING_KINDS.includes(j.kind));
+  if (["queued", "extracting"].includes(v.status)) items.push(["skip", "Skip (go on with the next video)"]);
+  if (["not_extracted", "error", "empty"].includes(v.status)) {
+    if (v.can_extract !== false) items.push(["extract", "Retry extraction"]);
+    items.push(["upload", "Upload the video file again…"]);
+  }
+  if (v.status === "ready") {
+    if (ml) items.push(["cancel-ml", "Cancel Detect + track"]);
+    else items.push(["detect", "Detect + track people"]);
+    items.push(["extract", "Re-extract frames (keep annotations)"]);
+  }
+  items.push(["delete", "Delete from library…"]);
+  return items;
+}
+
+function openVideoMenu(vid, x, y) {
+  const v = state.videos.find((it) => it.id === vid);
+  if (!v) return;
+  const menu = $("vid-menu");
+  menu.innerHTML = `<div class="vm-title">${escapeHtml(v.name)}</div>` + videoMenuItems(v).map(([act, label]) =>
+    `<button type="button" role="menuitem" data-act="${act}" class="${act === "delete" ? "danger-text" : ""}">${escapeHtml(label)}</button>`).join("");
+  menu.classList.remove("hidden");
+  const r = menu.getBoundingClientRect();
+  menu.style.left = `${Math.min(x, window.innerWidth - r.width - 6)}px`;
+  menu.style.top = `${Math.min(y, window.innerHeight - r.height - 6)}px`;
+  menu.querySelectorAll("button").forEach((b) => {
+    b.onclick = () => { closeVideoMenu(); videoAction(vid, b.dataset.act); };
+  });
+}
+
+function closeVideoMenu() {
+  $("vid-menu").classList.add("hidden");
+}
+
+async function videoAction(vid, act) {
+  const v = state.videos.find((it) => it.id === vid);
+  if (!v) return;
+  try {
+    if (act === "skip") {
+      await api(`/api/videos/${enc(vid)}/skip`, { method: "POST" });
+      toast(`Skipped ${v.name} — it can be extracted later with Retry`, "ok");
+    } else if (act === "extract") {
+      const body = v.extract_fps_known ? {} : { fps: extractFps() };
+      await api(`/api/videos/${enc(vid)}/extract`, { json: body });
+      toast(`${v.name}: extraction queued`, "ok");
+    } else if (act === "upload") {
+      return pickVideoFor(v);
+    } else if (act === "detect") {
+      const s = detectSettings();
+      await api(`/api/detect-track/${enc(vid)}`, {
+        json: { model: s.model, imgsz: 640, conf: s.conf, lying: s.lying, start: 0, poi: "largest" },
+      });
+      toast(`${v.name}: Detect + track queued (largest person = POI)`, "ok");
+    } else if (act === "cancel-ml") {
+      for (const j of activeJobsFor(vid).filter((x) => TRACKING_KINDS.includes(x.kind))) {
+        await api(`/api/jobs/${j.id}/cancel`, { method: "POST" });
+      }
+      toast(`${v.name}: cancelling Detect + track`);
+    } else if (act === "delete") {
+      return confirmDelete(v);
+    }
+  } catch (e) {
+    if (act === "extract" && e.status === 404) {
+      toast(`${e.message}`, "error");
+      return pickVideoFor(v);
+    }
+    toast(e.message, "error");
+  }
+  kickJobs();
+  await refreshVideos();
+}
+
+function pickVideoFor(v) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "video/*,.mp4,.mov,.avi,.mkv,.webm";
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (file) uploadVideo(file, "reextract_keep", v.id);
+  };
+  input.click();
+}
+
+function confirmDelete(v) {
+  state.pendingDelete = v.id;
+  $("delete-name").textContent = v.name;
+  $("delete-modal").showModal();
+}
+
+async function onDeleteSubmit(e) {
+  e.preventDefault();
+  const mode = e.submitter?.value || "cancel";
+  $("delete-modal").close();
+  const vid = state.pendingDelete;
+  state.pendingDelete = null;
+  if (!vid || mode === "cancel") return;
+  try {
+    if (vid === state.vid) closeVideo();
+    const res = await withWait("Stopping jobs and deleting…", () =>
+      api(`/api/videos/${enc(vid)}/delete`, { json: { mode } }));
+    toast(mode === "frames" ? "Frames deleted — use Retry to extract again" :
+      `Deleted from library${res.backup ? " (annotations copied to data/_trash)" : ""}`, "ok");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+  kickJobs();
+  await refreshVideos();
+}
+
+async function cleanupLibrary() {
+  const n = state.videos.filter(isRemovablePlaceholder).length;
+  if (!n || !window.confirm(`Remove ${n} video(s) that are not extracted or failed from the library?\n` +
+    "Your original video files are not touched; any annotations are copied to data/_trash.")) return;
+  try {
+    const res = await withWait("Removing…", () => api("/api/videos/cleanup", { method: "POST" }));
+    const kept = res.kept_with_annotations?.length || 0;
+    toast(`Removed ${res.removed.length} entr${res.removed.length === 1 ? "y" : "ies"}` +
+      (kept ? ` · kept ${kept} that have annotations (use ⋯ → Delete… for those)` : ""), "ok");
+  } catch (e) {
+    toast(e.message, "error");
+  }
+  await refreshVideos();
+}
+
+async function refreshLibrary() {
+  try {
+    const res = await api("/api/library/refresh", { method: "POST" });
+    state.videos = res.videos || [];
+    state.lastVideoRefresh = Date.now();
+    renderLibrary();
+    toast(res.fixed ? `Library refreshed — ${res.fixed} stuck entr${res.fixed === 1 ? "y" : "ies"} marked "not extracted" (use Retry)` : "Library refreshed", "ok");
+  } catch (e) {
+    toast(`Refresh failed: ${e.message} — if the server does not respond, restart it (see README)`, "error");
+  }
+  await pollJobs();
+}
+
+function closeVideo() {
+  stopPlay();
+  state.vid = null;
+  state.video = null;
+  state.frames = [];
+  $("workspace").classList.add("hidden");
+  $("empty-state").classList.remove("hidden");
+}
+
 function stepVideo(dir) {
-  const ready = visibleVideos().filter((v) => v.num_frames);
+  const ready = visibleVideos().filter((v) => v.num_frames && v.status === "ready");
   if (!ready.length) return;
   const i = ready.findIndex((v) => v.id === state.vid);
   const next = ready[clamp(i + dir, 0, ready.length - 1)];
@@ -549,8 +770,13 @@ function stepVideo(dir) {
 
 async function openVideo(vid) {
   const v = state.videos.find((x) => x.id === vid);
-  if (v && (!v.num_frames || v.status === "queued" || v.status === "extracting")) {
-    toast(v.status === "error" ? `Extraction failed: ${v.error}` : "This video is not extracted yet — it will be ready soon", v.status === "error" ? "error" : "");
+  if (v && (!v.num_frames || v.status !== "ready")) {
+    const msg = {
+      error: `Extraction failed: ${v.error} — use Retry, or Upload file… from the ⋯ menu`,
+      queued: "Waiting to be extracted — Skip it, or wait for the videos before it",
+      extracting: "Still extracting — wait, or press Skip to stop it",
+    }[v.status] || "Not extracted — press Retry next to the video";
+    toast(msg, v.status === "error" ? "error" : "");
     return;
   }
   stopPlay();
@@ -1567,12 +1793,26 @@ function waitForJob(job, title) {
 }
 
 async function cancelJob(id) {
+  const job = state.jobs.find((j) => j.id === id);
   try {
     await api(`/api/jobs/${id}/cancel`, { method: "POST" });
-    toast("Cancelling…");
+    toast(job?.kind === "import" && !job.video_id
+      ? "Stopping the import — extracted videos stay ready, the rest show “not extracted” with Retry"
+      : "Cancelling…");
   } catch (e) {
     toast(e.message, "error");
   }
+  kickJobs();
+}
+
+async function stopAllJobs() {
+  try {
+    const res = await api("/api/jobs/cancel-all", { json: {} });
+    toast(`Stopping ${res.cancelled} job(s). Extracted videos stay ready; use Retry / Detect + track per video.`, "ok");
+  } catch (e) {
+    toast(e.message, "error");
+  }
+  kickJobs();
 }
 
 async function pollJobs(initial = false) {
@@ -1598,7 +1838,7 @@ async function pollJobs(initial = false) {
     state.seenFinished.add(j.id);
     if (initial) continue;
     needVideos = true;
-    if (j.video_id && j.video_id === state.vid && j.kind !== "import") reloadCurrent = true;
+    if (j.video_id && j.video_id === state.vid && !["import", "extract"].includes(j.kind)) reloadCurrent = true;
     const waiter = state.waiters.get(j.id);
     if (j.status === "error") toast(`${j.title} failed: ${j.error}`, "error");
     else if (!waiter && j.status === "done") toast(`${j.title}: ${j.message}`, "ok");
@@ -1625,15 +1865,25 @@ async function pollJobs(initial = false) {
 function renderJobs() {
   const panel = $("jobs-panel");
   const now = Date.now() / 1000;
-  const shown = state.jobs.filter((j) => ["queued", "running"].includes(j.status) || (j.finished && now - j.finished < 8));
-  panel.innerHTML = shown.map((j) => `
+  const isActive = (j) => ["queued", "running"].includes(j.status);
+  const shown = state.jobs.filter((j) => isActive(j) || (j.finished && now - j.finished < 8));
+  const active = shown.filter(isActive).length;
+  const stopLabel = (j) => (j.kind === "import" && !j.video_id ? "Stop import"
+    : ["import", "extract"].includes(j.kind) ? "Stop" : "Cancel");
+  const head = active ? `<div class="jobs-head"><span class="small muted">${active} job${active > 1 ? "s" : ""} running or waiting</span>
+    <button type="button" class="danger small-btn" id="btn-stop-all" title="Stop the import and cancel every Auto-VIP / Detect + track job">Stop all</button></div>` : "";
+  panel.innerHTML = head + shown.map((j) => `
     <div class="job ${j.status}">
-      <div class="job-top"><span class="job-title">${escapeHtml(j.title)}</span>
-        ${["queued", "running"].includes(j.status) ? `<button type="button" class="icon ghost" data-cancel="${j.id}" title="Cancel">✕</button>` : `<span class="small">${j.status}</span>`}</div>
+      <div class="job-top"><span class="job-title" title="${escapeHtml(j.title)}">${escapeHtml(j.title)}</span>
+        ${isActive(j)
+          ? (j.cancel_requested ? `<span class="small muted">stopping…</span>`
+            : `<button type="button" class="small-btn job-stop" data-cancel="${j.id}" title="${stopLabel(j)}">${stopLabel(j)}</button>`)
+          : `<span class="small">${j.status}</span>`}</div>
       <div class="progress"><div style="width:${Math.round((j.progress || 0) * 100)}%"></div></div>
-      <div class="muted small job-msg">${escapeHtml(j.status === "queued" ? "Waiting in queue…" : j.message || "")}</div>
+      <div class="muted small job-msg" title="${escapeHtml(j.message || "")}">${escapeHtml(j.status === "queued" ? "Waiting in queue…" : j.message || "")}</div>
     </div>`).join("");
   panel.querySelectorAll("[data-cancel]").forEach((b) => { b.onclick = () => cancelJob(b.dataset.cancel); });
+  $("btn-stop-all")?.addEventListener("click", stopAllJobs);
 }
 
 // ---------------------------------------------------------------- export

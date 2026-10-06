@@ -36,6 +36,10 @@
         <button type="button" data-filter="todo">To do</button>
         <button type="button" data-filter="done">Labelled</button>
       </div>
+      <div class="lib-tools">
+        <button type="button" id="btn-lib-refresh" title="Re-scan the library and re-sync it with the running jobs">⟳ Refresh</button>
+        <button type="button" id="btn-lib-cleanup" class="hidden" title="Remove every entry that is not extracted or failed (annotations are kept in data/_trash)">Remove not extracted</button>
+      </div>
     </div>
 
     <div id="lib-list" class="lib-list"></div>
@@ -314,6 +318,22 @@
     </div>
   </form>
 </dialog>
+
+<dialog id="delete-modal">
+  <form method="dialog" id="delete-form">
+    <h2>Delete from library</h2>
+    <p><strong id="delete-name"></strong></p>
+    <p class="muted small">Jobs for this video are stopped first. A copy of its annotations is kept in
+      <span class="mono">data/_trash</span>. Your original video file is never touched.</p>
+    <div class="modal-actions column">
+      <button type="submit" value="frames">Delete frames only (keep annotations)</button>
+      <button type="submit" value="all" class="danger">Delete video and annotations</button>
+      <button type="submit" value="cancel" class="ghost">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="vid-menu" class="vid-menu hidden" role="menu"></div>
 
 <dialog id="wipe-modal">
   <form method="dialog" id="wipe-form">

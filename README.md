@@ -42,7 +42,9 @@ After updating the code, restart the server and hard-refresh the browser (`Ctrl+
      `P001` / `S001` in the path pre-fill Participant / Session ID.
    - *Detect + track people after extraction*: runs Detect + track (whole video, largest person =
      POI) on each video automatically.
-   - Already-imported videos are skipped unless *Re-extract* is ticked.
+   - Already-imported videos are skipped unless *Re-extract* is ticked (leave it off for a normal
+     re-open: with it on, every video is extracted again from scratch, which takes as long as the
+     first import).
 2. Click a video in the sidebar (or `PgUp` / `PgDn`). The first ready video opens automatically.
 3. **Video label** — Trauma / No trauma, participant, session, comments, context.
 4. **Person of interest** (red box, exactly one per frame):
@@ -78,7 +80,35 @@ After updating the code, restart the server and hard-refresh the browser (`Ctrl+
    The timeline under the image shows labelled ranges in colour.
 6. **Export** — everything autosaves. *Export all videos* writes the dataset files below.
 
-Background jobs (extraction, Detect + track, tracking) show in the sidebar with progress and a ✕ to cancel.
+Background jobs (extraction, Detect + track, tracking) show at the bottom of the sidebar with progress,
+a **Stop import** / **Cancel** button each and **Stop all**.
+
+### If an import seems stuck
+
+The sidebar row of the video being extracted shows *extracting… N frames extracted · %*. If that
+number stops growing, or the video never finishes:
+
+- **Skip** (button under the video) stops this one video and the import goes on with the next.
+- **Stop import** (or **Stop all**, which also cancels the queued Auto-VIP / Detect + track jobs) in
+  the jobs panel: finished videos stay ready, the others show *not extracted* with **Retry**.
+- **Retry** under a *not extracted* / *error* video extracts it again (same FPS). If the original file
+  was moved, the button says **Upload file…** — pick the video and it is extracted into the same entry.
+- **Detect + track** appears when you hover a ready video (also in its **⋯** menu / right-click), so
+  you can run detection video by video instead of ticking *Detect + track after extraction*.
+- **⋯ → Delete from library…**: *Delete frames only* (keeps annotations; Retry later) or *Delete
+  video and annotations*. A copy of the annotation files goes to `data/_trash/`; the original video
+  file is never touched. **Remove not extracted** (next to **⟳ Refresh**) clears all failed /
+  not-extracted entries that have no annotations.
+- **⟳ Refresh** re-syncs the list with the running jobs: a video that says *waiting* without an import
+  behind it becomes *not extracted* (Retry).
+- Server not responding: press `Ctrl+C` in its terminal (or close it), start `py app.py --data ./data`
+  again and refresh the browser. Videos that were extracting are shown as *not extracted —
+  Interrupted*; use **Retry**, then **Detect + track** per video.
+
+Safeguards: a video whose extraction makes no progress for 60 s is stopped and tried once with
+OpenCV; files with broken timestamps (which would make ffmpeg write endless duplicate frames) are
+re-extracted with rebuilt timestamps; a file that still fails is marked *error* and the import
+continues with the next video.
 
 ### Keyboard shortcuts (`?` in the app)
 

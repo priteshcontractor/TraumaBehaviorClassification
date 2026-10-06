@@ -1,0 +1,19 @@
+{
+  "video_id": "AS_T_Sequence_5_clip_003",
+  "source_path": "D:\\Github\\TraumaBehaviorClassification\\data\\AS_T_Sequence 5_clip_003.mp4",
+  "source_name": "AS_T_Sequence 5_clip_003.mp4",
+  "rel_path": "AS_T_Sequence 5_clip_003.mp4",
+  "group": "data",
+  "order": 2,
+  "root": "D:\\Github\\TraumaBehaviorClassification\\data",
+  "status": "ready",
+  "error": null,
+  "frames_version": 1790587344,
+  "num_frames": 240,
+  "fps": 29.97,
+  "src_fps": 29.97,
+  "width": 640,
+  "height": 360,
+  "duration": 8.008008008008009,
+  "engine": "opencv"
+}
